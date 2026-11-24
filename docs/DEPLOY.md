@@ -40,23 +40,13 @@ Project → **Settings → Environment Variables**. Uchalasini **Production** va
 
 **Import** tugmasini bosganingizdan keyin Vercel birinchi deploy'ni o'zi qiladi. Shundan keyin `main` ga har push avtomatik production deploy, har PR esa preview deploy oladi.
 
-Bu yerda tugadi — CI/CD ishlayapti. Quyidagi qadam faqat deploy'ni GitHub Actions nazorati ostiga olishni xohlasangiz kerak.
+Bu yerda tugadi — CI/CD ishlayapti: deploy'ni Vercel'ning Git integratsiyasi qiladi, GitHub Actions esa faqat tekshiruv o'tkazadi.
 
 ---
 
-## Ixtiyoriy: deploy'ni GitHub Actions orqali yuritish
+## GitHub Actions (faqat tekshiruv)
 
-`.github/workflows/deploy-vercel.yml` har push'da `typecheck → lint → build` qiladi. Vercel secret'lari qo'yilmagan bo'lsa, u faqat shu tekshiruvni bajaradi va deploy qadamini o'tkazib yuboradi (Vercel o'zining Git integratsiyasi bilan deploy qilaveradi).
-
-Deploy'ni ham Actions qilsin desangiz — repo **Settings → Secrets and variables → Actions** ga uchta secret qo'shing:
-
-| Secret | Qayerdan olinadi |
-|---|---|
-| `VERCEL_TOKEN` | vercel.com/account/tokens |
-| `VERCEL_ORG_ID` | Project → Settings → General (yoki `.vercel/project.json`) |
-| `VERCEL_PROJECT_ID` | xuddi o'sha joyda |
-
-Keyin Vercel dashboard'da **Settings → Git → Ignored Build Step** ga `exit 0` qo'ying — aks holda bitta push ikki marta deploy bo'ladi.
+`.github/workflows/deploy-vercel.yml` har push va PR'da `typecheck → lint → test:feedback → build` qiladi. U deploy qilmaydi — deploy'ni Vercel'ning o'z Git integratsiyasi bajaradi, shuning uchun Vercel secret'lari yoki *Ignored Build Step* kerak emas.
 
 ---
 

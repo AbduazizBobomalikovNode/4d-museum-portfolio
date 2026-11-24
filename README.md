@@ -98,7 +98,7 @@ Scripts from `package.json`:
 **Environment variables** (names only, see `.env.example`):
 `VITE_RENDERER` (`webgl`, default), `VITE_DEBUG`, `VITE_PHYSICS_DEBUG`, `VITE_FEEDBACK_ENDPOINT`. Server side, the relay reads `TG_BOT_TOKEN` and `TG_CHAT_ID`. Never put a token behind a `VITE_` name: those values are inlined into the public bundle.
 
-**Deployment.** The site is built for Vercel (`vercel.json`, a GitHub Actions quality gate in `.github/workflows/deploy-vercel.yml`). Step by step in [`docs/DEPLOY.md`](docs/DEPLOY.md).
+**Deployment.** The site is built for Vercel (`vercel.json`, a GitHub Actions quality gate (checks only, no deploy) in `.github/workflows/deploy-vercel.yml`; Vercel's Git integration does the deploying). Step by step in [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ## Project structure
 

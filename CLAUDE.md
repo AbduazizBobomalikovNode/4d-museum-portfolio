@@ -3,7 +3,7 @@
 Interaktiv 3D muzey-portfolio (Concept A "Tesseract Gallery"). Batafsil: `README.md`, `docs/CONCEPT.md`, research `docs/research/`.
 
 ## Deploy
-**Vercel is the target** (`vercel.json` + `.github/workflows/deploy-vercel.yml`, setup steps in `docs/DEPLOY.md`): GitHub Pages was retired in its favour, and Vercel runs `api/feedback.js` as a real function so the feedback form finally delivers with the bot token server-side. Vercel builds with `BASE_PATH=/ VITE_FEEDBACK_ENDPOINT=/api/feedback`, so `base` is `/` there — `asset()` still handles both. The Actions workflow is a quality gate (typecheck → lint → build) that skips its deploy step until `VERCEL_TOKEN` exists, so Vercel's own Git integration can own deployment.
+**Vercel is the target** (`vercel.json` + `.github/workflows/deploy-vercel.yml`, setup steps in `docs/DEPLOY.md`): GitHub Pages was retired in its favour, and Vercel runs `api/feedback.js` as a real function so the feedback form finally delivers with the bot token server-side. Vercel builds with `BASE_PATH=/ VITE_FEEDBACK_ENDPOINT=/api/feedback`, so `base` is `/` there — `asset()` still handles both. The Actions workflow is a quality gate only (typecheck → lint → feedback tests → build) with no deploy job; Vercel's own Git integration owns deployment.
 
 GitHub Pages is no longer used and its workflow was removed. `vite.config.ts` still honours `BASE_PATH` — it defaults to `/4D-portfolio/` for a Pages-style subpath, and Vercel overrides it to `/`. Keep resolving public assets with `asset()` from `src/lib/geo.ts`, never a leading `/`, so both layouts keep working.
 
