@@ -1,0 +1,314 @@
+<title>4D Muzey-Portfolio Research</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F2F1EC; --bg2:#E9E7E0; --ink:#16171B; --ink2:#4B4E57; --line:#D5D2C8;
+  --accent:#B8780F; --accent-soft:#F5E6C4; --spot:#8A5A00; --cyan:#0B7285;
+  --card:#FAF9F6; --mono-bg:#ECEAE3;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C0D11; --bg2:#13151B; --ink:#E8E6E0; --ink2:#A5A39B; --line:#272A33;
+    --accent:#F2B441; --accent-soft:#2A2212; --spot:#FFD27A; --cyan:#5DE4FF;
+    --card:#121419; --mono-bg:#171920;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C0D11; --bg2:#13151B; --ink:#E8E6E0; --ink2:#A5A39B; --line:#272A33;
+  --accent:#F2B441; --accent-soft:#2A2212; --spot:#FFD27A; --cyan:#5DE4FF;
+  --card:#121419; --mono-bg:#171920;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--cyan);text-decoration:none;border-bottom:1px solid transparent}
+a:hover,a:focus-visible{border-bottom-color:currentColor;outline:none}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+h1,h2,h3,h4{font-family:"Syne","IBM Plex Sans",sans-serif;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.2rem,5vw,4rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:clamp(1.5rem,2.6vw,2rem);font-weight:700;margin-bottom:.5rem}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0 0 1rem;max-width:72ch}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+header{padding:72px 0 40px;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+header canvas{position:absolute;right:-40px;top:-20px;width:min(46vw,520px);height:360px;opacity:.9;pointer-events:none}
+header .wrap{position:relative}
+.lede{font-size:1.15rem;color:var(--ink2);max-width:58ch;margin-top:1rem}
+.meta{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:22px;font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--ink2)}
+.meta b{color:var(--ink);font-weight:500}
+section{padding:52px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+.sec-head{display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:22px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:18px 20px}
+.card h3{margin-bottom:8px}
+.card p{font-size:.95rem;color:var(--ink2);margin-bottom:.5rem}
+.card p:last-child{margin-bottom:0}
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:18px 0 6px}
+.stat div{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.stat .n{font-family:"Syne",sans-serif;font-size:2rem;font-weight:800;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums}
+.stat .l{font-size:.85rem;color:var(--ink2);margin-top:6px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:640px}
+th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:500;background:var(--bg2)}
+tr:last-child td{border-bottom:0}
+td b{font-weight:600}
+.pill{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.06em;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--ink2);margin-right:4px;white-space:nowrap}
+.pill.rec{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.plaque{border-left:3px solid var(--accent);background:var(--accent-soft);padding:14px 18px;border-radius:0 6px 6px 0;margin:18px 0}
+.plaque p{margin:0;max-width:80ch}
+code,.mono{font-family:"IBM Plex Mono",monospace;font-size:.85em;background:var(--mono-bg);padding:1px 5px;border-radius:3px}
+pre{background:var(--mono-bg);border:1px solid var(--line);border-radius:6px;padding:14px 16px;overflow-x:auto;font-size:.82rem;line-height:1.5}
+pre code{background:none;padding:0}
+ol,ul{padding-left:1.2rem;margin:0 0 1rem}
+li{margin-bottom:.35rem}
+.concept{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.concept .card{display:flex;flex-direction:column;gap:8px}
+.swatches{display:flex;gap:6px;margin:4px 0 6px}
+.swatches span{width:28px;height:28px;border-radius:4px;border:1px solid var(--line)}
+.kv{font-size:.9rem;color:var(--ink2)}
+.kv b{color:var(--ink);font-weight:600}
+.refs{columns:2;column-gap:32px;font-size:.9rem}
+.refs li{break-inside:avoid}
+@media (max-width:720px){.refs{columns:1} header canvas{display:none} header{padding-top:48px}}
+.roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.roadmap .card{position:relative}
+.roadmap .wk{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--accent);letter-spacing:.1em}
+footer{padding:36px 0 64px;color:var(--ink2);font-size:.85rem}
+@media (prefers-reduced-motion: reduce){header canvas{display:none}}
+</style>
+
+<header>
+  <canvas id="tess" width="520" height="360" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="eyebrow">Research brief · 2026-08-23</div>
+    <h1>4D Muzey-Portfolio Research</h1>
+    <p class="lede">Uy/muzey ichida ekspanatlarni tomosha qilgandek, o'yin-simulyatsiya uslubida aylanib yuriladigan 3D/4D portfolio sayt uchun texnologiyalar, uslublar, navigatsiya modellari, misollar va tavsiyalar.</p>
+    <div class="meta">
+      <span>Manbalar: <b>~140 web search / fetch</b></span>
+      <span>Agentlar: <b>4 parallel + asosiy</b></span>
+      <span>Papka: <b>docs/research/</b></span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">01 · Xulosa</div><h2>Beshta asosiy topilma</h2></div>
+    <div class="stat">
+      <div><div class="n">61%</div><div class="l">Awwwards SOTD Q1-2026 — immersive 3D saytlar (2024: 23%)</div></div>
+      <div><div class="n">95%</div><div class="l">WebGPU qamrovi (Safari 26 + Chrome + Firefox), qolgani auto WebGL2 fallback</div></div>
+      <div><div class="n">13 min</div><div class="l">Xbox Museum o'rtacha dwell time (oddiy microsite: 45 s)</div></div>
+      <div><div class="n">5.7 MB</div><div class="l">Messenger — Developer Site of the Year 2025, multiplayer sayyora</div></div>
+    </div>
+    <div class="grid g2" style="margin-top:18px">
+      <div class="card"><h3>1. Bitta g'oya, restraint bilan</h3><p>2025–26 g'oliblarining umumiy xususiyati: "one defended idea" — scene-logic (film kabi), page-logic emas. Og'ir effektlar faqat kerakli joyda. Static frame ham kuchli bo'lishi shart.</p></div>
+      <div class="card"><h3>2. Erkin yurish — eng sevimli va eng tanqid qilinadigan model</h3><p>Bruno Simon 2025 remake HN'da "CPU 100%, 30 s load, ma'lumot topilmaydi" deb tanqid qilingan. NN/g: guided tour + context-by-default yaxshiroq ishlaydi. → <b>Hybrid navigatsiya</b>: guided rail default + ixtiyoriy free-walk.</p></div>
+      <div class="card"><h3>3. Stack konvergensiyasi</h3><p>Three.js (WebGPU + TSL) + R3F + Rapier/BVH + GSAP(+Lenis) + Blender baked + Draco/KTX2 + Vite. Hammasi MIT/bepul (GSAP 2025-dan bepul).</p></div>
+      <div class="card"><h3>4. "4D" = vaqt qatlami + portallar</h3><p>"4D portfolio" brendi bo'yicha hech qanday precedent yo'q — bu imkoniyat. Eng yaxshi referenslarda vaqt allaqachon bor (Bruno 2025: fasllar + kun/tun; My Room: blended lightmaps). Portallar (drei MeshPortalMaterial / stencil) — non-Euclid xonalar uchun tayyor.</p></div>
+      <div class="card"><h3>5. Blender = level editor, brauzer = renderer</h3><p>Baked lightmaps + matcap, naming conventions orqali collider/spawn, tiered quality (detect-gpu), room = section, exhibit = deep link, HTML content 3D'dan tashqarida.</p></div>
+      <div class="card"><h3>6. AI capture tayyor</h3><p>Spark 2.0 (World Labs) Three.js ichida streaming Gaussian splat; Marble text→3D world (splat + collider mesh export). Haqiqiy xonani skanerlab "memory room" qilish mumkin.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">02 · Texnologiyalar</div><h2>Stack taqqoslash va tavsiya</h2></div>
+    <div class="tbl"><table>
+      <tr><th>Engine</th><th>Bundle</th><th>WebGPU</th><th>Physics</th><th>Editor</th><th>Muzey-walkthrough uchun</th></tr>
+      <tr><td><b>Three.js / R3F</b> <span class="pill rec">TAVSIYA</span></td><td>~168 kB gz (+React)</td><td>prod r171+, auto WebGL2 fallback, TSL</td><td>Rapier / BVH</td><td>code-first</td><td><b>Eng yaxshi</b> — ekotizim, portfolio precedentlar (Bruno, Samsy, Thibault)</td></tr>
+      <tr><td>Babylon.js 9 (Mar 2026)</td><td>~1.4 MB</td><td>native WGSL, clustered/volumetric lighting</td><td>Havok built-in</td><td>Playground/NME</td><td>Juda yaxshi, ayniqsa WebXR</td></tr>
+      <tr><td>PlayCanvas</td><td>150–300 kB</td><td>ha (compute splats)</td><td>Ammo</td><td>cloud editor (pullik)</td><td>Yaxshi — mobile/splat</td></tr>
+      <tr><td>Needle Engine</td><td>three-based</td><td>inherits</td><td>Rapier</td><td>Unity/Blender export</td><td>Yaxshi, commercial €49/oy</td></tr>
+      <tr><td>Unity 6 Web</td><td>10+ MB (2 MB stripped)</td><td>experimental</td><td>built-in</td><td>full</td><td>Og'ir, faqat Unity dev bo'lsa</td></tr>
+      <tr><td>Godot 4</td><td>20–40 MB</td><td>yo'q (WebGL2), C# web yo'q</td><td>built-in</td><td>full</td><td>Og'ir, jam-style</td></tr>
+      <tr><td>Unreal Pixel Streaming</td><td>video</td><td>—</td><td>built-in</td><td>full</td><td>Eng yuqori fidelity, doimiy xarajat (€0.15/min)</td></tr>
+      <tr><td>Spline</td><td>og'ir runtime</td><td>—</td><td>—</td><td>browser</td><td>Faqat hero obyektlar; walkable emas</td></tr>
+    </table></div>
+
+    <div class="plaque"><p><b>Tavsiya etilgan stack (solo/kichik jamoa, 2026):</b> Vite + React 19 + TS · <code>@react-three/fiber@9.5+</code> (v10 beta chiqqach migratsiya) · <code>three/webgpu</code> + TSL (auto fallback) · <code>@react-three/rapier</code> v2 + <code>ecctrl</code> (yoki physics-siz <code>BVHEcctrl</code>) · Blender → GLB → <code>gltf-transform optimize</code> (Meshopt + KTX2) → <code>gltfjsx</code> · baked lightmaps UV2 + drei <code>Environment</code> · GSAP 3.13 + <code>camera-controls</code> · WebGPU: three <code>RenderPipeline</code> (bloom/GTAO/DOF) · WebGL: pmndrs postprocessing + N8AO · drei <code>PositionalAudio</code> + Howler · drei <code>PerformanceMonitor</code> + detect-gpu tiers · Vercel/CF Pages + R2.</p></div>
+
+    <div class="grid g3">
+      <div class="card"><h3>WebGPU holati</h3><p>Chrome/Edge 113+, Chrome Android 121+, Firefox 141+ (Win) / 147+ (mac), Safari 26 default. Three.js r184 (Apr 2026), r185 (Jul 2026). <code>await renderer.init()</code> majburiy; <code>forceWebGL:true</code> bilan fallback test qilinadi.</p></div>
+      <div class="card"><h3>Character controller</h3><p><b>ecctrl</b> (781★, 2026-08): floating capsule, FP/TP, touch joystick. <b>BVHEcctrl</b>: three-mesh-bvh, physics engine yo'q — statik muzey GLB uchun ideal. Vanilla: <b>hh-hang/three-player-controller</b> (3DGS demo ham bor).</p></div>
+      <div class="card"><h3>Asset pipeline</h3><pre><code>gltf-transform optimize in.glb out.glb \
+  --compress meshopt --texture-compress ktx2
+npx gltfjsx out.glb -T -t -S</code></pre><p>Budget: &lt;100 draw call, 40k tris / 2.1 MB polished demo; 4K texture = 64 MB VRAM → KTX2.</p></div>
+      <div class="card"><h3>Post-FX</h3><p>WebGPU: <code>RenderPipeline</code> (r182/183), bloom(), GTAO, DOF, SSR, SSGI, TRAA. WebGL: pmndrs postprocessing + N8AO. Legacy EffectComposer — "no path forward". Mobile: half-res, SMAA, PerformanceMonitor decline'da o'chirish.</p></div>
+      <div class="card"><h3>Yorug'lik</h3><p>Interyer statik → Cycles baked lightmaps + HDRI env; ≤1 realtime shadow light; LightProbeGrid (r184); SSGI faqat desktop accent. Shadow map 512–1024 mobile.</p></div>
+      <div class="card"><h3>Deprecated / xavf</h3><p><code>framer-motion-3d</code> va <code>@lumaai/luma-web</code> — deprecated. Theatre.js public repo to'xtagan. <code>react-three-next</code> eskirgan (2024). GaussianSplats3D → Spark 2.0 bilan almashgan.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">03 · Navigatsiya</div><h2>Yurish modellari va UX tradeoff</h2></div>
+    <div class="tbl"><table>
+      <tr><th>Model</th><th>Misol</th><th>Plus</th><th>Minus</th></tr>
+      <tr><td><b>First-person WASD + pointer lock</b></td><td>samsy.ninja, toshihito-endo.com, Skull Hotel</td><td>maksimal immersiya, "o'yin"</td><td>collision, mobile qiyin, gamer bo'lmaganlar uchun qo'rqinchli; NN/g: "8 swipe to turn"</td></tr>
+      <tr><td><b>Scroll-driven rail camera</b> (Blender curve)</td><td>Codrops Fan Museum / CurveGallery 2026, Cartier alcoves, Lempens Paris</td><td>kinematik, mobile trivial, SEO</td><td>agency yo'q</td></tr>
+      <tr><td>Click-to-move / teleport (Matterport)</td><td>Matterport, Kunstmatrix</td><td>motion sickness yo'q, touch OK</td><td>"yurish" hissi kam</td></tr>
+      <tr><td>Fixed camera points</td><td>Jordan Breton (FWA), Jesse's Ramen hotspots</td><td>arzon, baked</td><td>cheklangan</td></tr>
+      <tr><td>Third-person character/vehicle</td><td>Bruno Simon, Thibault, Jay Ransijn, Messenger</td><td>esda qoladi, physics gag</td><td>eng qimmat; ma'lumotni yashiradi</td></tr>
+      <tr><td>Guided tour / audio guide</td><td>Artsteps, Kunstmatrix AI guide</td><td>eng past interaction cost</td><td>skip bo'lishi shart</td></tr>
+    </table></div>
+    <div class="plaque"><p><b>Sintez:</b> Award g'oliblari orasida sof WASD muzey kam uchraydi (GitHub'da ko'p). Eng muvaffaqiyatli: (a) scroll/curve cam + mouse parallax, (b) fixed points, (c) character + follow cam, (d) FP faqat u asosiy g'oya bo'lsa. Har doim floor-plan / mini-map "escape hatch". Xbox Museum darsi: foydalanuvchi bir tomon bo'ylab yuradi, orqasiga qaramaydi → kontentni navbatma-navbat devorlarga qo'yish.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">04 · Vizual uslublar</div><h2>Art direction variantlari</h2></div>
+    <div class="tbl"><table>
+      <tr><th>Uslub</th><th>Nima beradi</th><th>Misol</th><th>Qiyinlik</th><th>Perf</th></tr>
+      <tr><td>Low-poly stylized</td><td>o'ynoqi, indie game</td><td>bruno-simon.com, worawork, jayransijn</td><td>Low–Med</td><td>Low</td></tr>
+      <tr><td>Isometric "my room"</td><td>shaxsiy, cozy</td><td>Jesse's Ramen, Soo-ah's Room (HM 2025), bokoko33</td><td>Low–Med</td><td>Low</td></tr>
+      <tr><td><b>Photoreal baked</b> (Cycles → KTX2)</td><td>premium, "haqiqiy joy"</td><td>Codrops Fan Museum, Wawa Sensei baking</td><td>Med–High</td><td>Med</td></tr>
+      <tr><td><b>Brutalist concrete / black-box gallery</b></td><td>jiddiy, Ando, spot yorug'lik</td><td>Iventions (spotlit installations), Bartlett (b/w/gray)</td><td>Med</td><td>Low–Med</td></tr>
+      <tr><td>Neon cyberpunk</td><td>tech mastery</td><td>samsy.ninja (WebGPU 120fps), Thibault</td><td>High</td><td>High</td></tr>
+      <tr><td>Retro-futurism / sci-fi station</td><td>hard sci-fi</td><td>Monolith Project, Equinox</td><td>High</td><td>Med–High</td></tr>
+      <tr><td>Liminal / dreamcore</td><td>notinchlik, nostalgia</td><td>Backrooms resurgence 2026</td><td>Low geo / Med atmos</td><td>Low–Med</td></tr>
+      <tr><td>PS1 / dithered</td><td>ironiya, indie</td><td>Sounalet PS1 museum, Codrops PS1 jitter, Heckel dithering</td><td>Low–Med</td><td>Very low</td></tr>
+      <tr><td>Liquid Glass / visionOS UI</td><td>Apple polish (ADC Gold 2026)</td><td>backdrop-filter + SVG displacement</td><td>Low UI</td><td>Med mobile</td></tr>
+      <tr><td>Gaussian splats</td><td>"men shu yerda bo'lganman"</td><td>Spark 2.0, Marble, SuperSplat</td><td>Med</td><td>Med–High (10–100 MB)</td></tr>
+    </table></div>
+    <p class="kv" style="margin-top:14px"><b>Trendlar 2026:</b> scrollytelling ("5 fokusli sahna &gt; 15 bo'lim"), kinetic type, morphing cursor, grain overlay, sound design, bento/brutalism 2D qatlam uchun, dark default, spatial (visionOS) panellar, Liquid Glass. <b>Muzey yorug'ligi:</b> white cube (tekis, klinik) vs black box (spot pool, ierarxiya); 4000K sovuq — beton/metall, 2700–3000K iliq — yog'och/rasm; AgX/ACES + teal-orange + vignette + grain.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">05 · "4D" g'oyasi</div><h2>Vaqt, portal, tesseract</h2></div>
+    <div class="grid g3">
+      <div class="card"><h3>Vaqt qatlami</h3><p>Time-dial HUD slider: kun→tun, fasllar, "timeline corridor" — xonalar = yillar; yurgan sari arxitektura/yorug'lik yoshi o'zgaradi. Texnika: bir nechta baked lightmap'ni uniform bilan aralashtirish (My Room in 3D), drei <code>Sky</code> sunPosition, HDRI swap, ITom "baked global tint".</p></div>
+      <div class="card"><h3>Portallar (non-Euclid)</h3><p>drei <code>MeshPortalMaterial</code> (<code>blend</code> bilan kirish), drei <code>&lt;Mask&gt;</code> stencilRef swap, render-target + oblique clipping (Portal/Antichamber uslubi). Perf: ≤2 ko'rinadigan portal, half-res RT, offscreen'da o'chirish. Referens: thefrontdev stencil, Wawa Sensei tutorial, immersive-world-xi.vercel.app.</p></div>
+      <div class="card"><h3>Tesseract hub</h3><p>6 tekislikda aylanish (XY/XZ/XW/YZ/YW/ZW) + w-perspective → 3D. Logo/loader/atrium markazi; eshiklar = hypercube'ning 8 katagi (net). Refs: ciechanow.ski/tesseract, tsherif tesseract-explorer (WebGL2), topoviz.org, 4d.pardesco.com.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">06 · Konseptlar</div><h2>Uchta yo'nalish</h2></div>
+    <div class="concept">
+      <div class="card">
+        <span class="pill rec">A · TAVSIYA</span>
+        <h3>Tesseract Gallery</h3>
+        <div class="swatches"><span style="background:#0B0C10"></span><span style="background:#2A2D34"></span><span style="background:#4A4E57"></span><span style="background:#5DE4FF"></span><span style="background:#F2B441"></span></div>
+        <p class="kv"><b>Mood:</b> black-box muzey + brutalist beton; har xona = hypercube katagi; atriumda 4D aylanuvchi tesseract; portallar xonalarni non-Euclid bog'laydi.</p>
+        <p class="kv"><b>Nav:</b> guided rail default (scroll/arrow, pedestal'da to'xtash) + Free-walk toggle (WASD/joystick) + mini-map = hypercube net + click-teleport. Inspect = E/tap → Liquid-Glass DOM panel.</p>
+        <p class="kv"><b>4D:</b> time-dial (kun→tun) + timeline corridor.</p>
+        <p class="kv"><b>Qiyinlik:</b> High, ~3–5 oy solo.</p>
+      </div>
+      <div class="card">
+        <span class="pill">B</span>
+        <h3>Liminal Dream-House</h3>
+        <div class="swatches"><span style="background:#F4EFE6"></span><span style="background:#BFE3D0"></span><span style="background:#F7E8A4"></span><span style="background:#F2C6C2"></span></div>
+        <p class="kv"><b>Mood:</b> dreamcore pastel flüoresan xonalar, tuman, "noto'g'ri" proporsiyalar; memory room = haqiqiy joyning Gaussian splat'i shisha portal orqali; VHS/dither toggle.</p>
+        <p class="kv"><b>Nav:</b> click-to-move floor hotspots + sekin auto-turn (pointer lock yo'q); xonalar orqangizda almashadi; dollhouse overview.</p>
+        <p class="kv"><b>Qiyinlik:</b> Medium.</p>
+      </div>
+      <div class="card">
+        <span class="pill">C</span>
+        <h3>Neon Space-Station Archive</h3>
+        <div class="swatches"><span style="background:#070B1F"></span><span style="background:#FF3DA6"></span><span style="background:#29E3FF"></span><span style="background:#D9F21C"></span></div>
+        <p class="kv"><b>Mood:</b> cyberpunk stansiya, emissive signage, ho'l pol refleksiya, holografik plaque; tesseract star-map; WebGPU bloom/SSR.</p>
+        <p class="kv"><b>Nav:</b> third-person astronavt + collectibles (ekspanatlarni ochadi), "tram" scroll mode, joystick, achievement HUD.</p>
+        <p class="kv"><b>Qiyinlik:</b> Very High, eng perf-xavfli.</p>
+      </div>
+    </div>
+    <div class="plaque"><p><b>Hammasi uchun baseline:</b> HTML-first kontent + per-room URL (SEO), "Enter with/without sound", progress loader, detect-gpu tiers + manual quality toggle, <code>prefers-reduced-motion</code>, react-three-a11y focusable ekspanatlar, 2D "skip 3D" guide sahifa, mini-map, restraint — bitta hero g'oya (portal/4D), qolgani sokin.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">07 · Muzey UX</div><h2>O'zlashtirishga arziydigan konventsiyalar</h2></div>
+    <div class="grid g3">
+      <div class="card"><h3>Xona = kategoriya</h3><p>Entrance hall = intro/about; wings = loyihalar; lab = skills; corridor = timeline; gift shop = contact/CTA (Jesse: vending machine / arcade credits).</p></div>
+      <div class="card"><h3>Plaque + audio guide</h3><p>Har ekspanat yonida label (drei <code>Html</code>, occlude); ixtiyoriy curator narration (TTS/recorded) — NN/g "expert-led" tavsiyasi.</p></div>
+      <div class="card"><h3>Inspect / diegetic UI</h3><p>"Press E" / tap → modal; ekranlar ichida video (<code>useVideoTexture</code>) yoki iframe (Henry Heffernan CSS3D). HTML-in-Canvas API (Chrome 148–150 origin trial) — kelajakda live DOM texture.</p></div>
+      <div class="card"><h3>Gamification (me'yorida)</h3><p>Collectibles (Thibault: 10 ta), destructible logolar, easter egg, leaderboard. Dwell time ko'tariladi, lekin "wow tez so'nadi".</p></div>
+      <div class="card"><h3>Loading & onboarding</h3><p>Chunked Suspense + progress + "Enter" gate (audio unlock). Control hints shart. Loading'ni san'atga aylantirish (Ameen: sakura petals).</p></div>
+      <div class="card"><h3>Liveness</h3><p>Ghost avatarlar (PartyKit 10 Hz), global counter, "whispers" — kichik shared state ham joyni "yashaydigan" qiladi.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">08 · Referenslar</div><h2>O'rganish uchun eng muhim misollar</h2></div>
+    <ol class="refs">
+      <li><a href="https://bruno-simon.com/">bruno-simon.com</a> + <a href="https://github.com/brunosimon/folio-2025">folio-2025</a> (MIT, WebGPU+TSL+Rapier) + <a href="https://www.awwwards.com/brunos-portfolio-case-study.html">case study</a></li>
+      <li><a href="https://samsy.ninja/">samsy.ninja</a> — first-person WebGPU, SOTD+Dev 2025</li>
+      <li><a href="https://hellomonday.com/work/the-bartlett-school-of-architecture-summer-show-2020">Bartlett Summer Show</a> — 32 walkable room → 2D page</li>
+      <li><a href="https://activetheory.net/work/xbox-museum">20 Years of Xbox Museum</a> — 6 galereya, multiplayer</li>
+      <li><a href="https://tympanus.net/codrops/2025/04/08/3d-world-in-the-browser-with-blender-and-three-js/">Codrops Fan Museum</a> — baked muzey tutorial</li>
+      <li><a href="https://iventions.com">iventions.com</a> — spotlit installations</li>
+      <li><a href="https://www.awwwards.com/sites/cartier-watches-wonders-2026">Cartier W&amp;W 2026</a> — alcove/room per product</li>
+      <li><a href="https://jessezhou.com/">Jesse's Ramen</a> + <a href="https://github.com/enderh3art/Ramen-Shop">repo</a></li>
+      <li><a href="https://henryheffernan.com/">Henry Heffernan</a> + <a href="https://github.com/henryjeff/portfolio-website">repo</a> (iframe screen)</li>
+      <li><a href="https://thibault-introvigne.com">Thibault Introvigne</a> — R3F, collectibles</li>
+      <li><a href="https://messenger.abeto.co">Messenger</a> — 5.7 MB multiplayer</li>
+      <li><a href="https://skullhotel.io">Skull Hotel</a> + <a href="https://github.com/JamesHall38/skullhotel.io">repo</a> — R3F FP 8 xona</li>
+      <li><a href="https://salzzeit.animiti.at/">Salzzeit 3D Museum</a> — R3F FP + joystick</li>
+      <li><a href="https://dreamhouse.pierret.net/">Pierret Dream House</a> — uy qurib yurish</li>
+      <li><a href="https://locomotive.ca/en/work/elektra-virtual-museum">Elektra Virtual Museum</a></li>
+      <li><a href="https://www.phantom.land/projects/the-museum-of-annoying-experiences">Museum of Annoying Experiences</a></li>
+      <li><a href="https://github.com/pmndrs/ecctrl">pmndrs/ecctrl</a> · <a href="https://github.com/pmndrs/BVHEcctrl">BVHEcctrl</a> · <a href="https://github.com/hh-hang/three-player-controller">three-player-controller</a></li>
+      <li><a href="https://github.com/ITomPoland/portfolio-itom">ITomPoland/portfolio-itom</a> — 2026 perf arxitektura</li>
+      <li><a href="https://github.com/sparkjsdev/spark">Spark</a> + <a href="https://github.com/icurtis1/third-person-controller-splat">splat + KCC template</a></li>
+      <li><a href="https://github.com/lbartworks/openvgal">openvgal</a> — gallery data model (Babylon)</li>
+      <li><a href="https://threejs-journey.com/">Three.js Journey</a> Ch.6 Portal Scene + Ch.7 R3F · <a href="https://wawasensei.dev/courses/react-three-fiber">Wawa Sensei</a> Ch.6 Portfolio</li>
+      <li><a href="https://ciechanow.ski/tesseract/">Tesseract (Ciechanowski)</a> · <a href="https://www.topoviz.org/">Topoviz</a></li>
+      <li><a href="https://www.utsubo.com/blog/best-threejs-websites-2026">Utsubo 2026</a> · <a href="https://www.hontran.dev/blog/best-award-winning-websites-2026">Hon Tran jury</a> · <a href="https://metabole.studio/en/blog/immersive-website-examples">Metabole</a></li>
+      <li><a href="https://www.worldlabs.ai/blog/marble-world-model">Marble</a> · <a href="https://www.worldlabs.ai/blog/spark-2.0">Spark 2.0 streaming</a></li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head"><div class="eyebrow">09 · Keyingi qadam</div><h2>Taklif etilgan roadmap</h2></div>
+    <div class="roadmap">
+      <div class="card"><div class="wk">Hafta 1–2</div><h3>Konsept + Blender blockout</h3><p>A/B/C dan tanlov; xonalar rejasi (hypercube net), exhibit ro'yxati; greybox GLB; r3f-vite-starter + ecctrl skeleton.</p></div>
+      <div class="card"><div class="wk">Hafta 3–5</div><h3>Navigatsiya + loading</h3><p>Guided rail (Blender curve) + free-walk toggle, mini-map, Enter gate, progress, detect-gpu tiers, mobile joystick.</p></div>
+      <div class="card"><div class="wk">Hafta 6–9</div><h3>Art + baking</h3><p>Cycles baking → KTX2, gltf-transform pipeline, plaque/Html, video screens, spatial audio, post-FX (WebGPU RenderPipeline).</p></div>
+      <div class="card"><div class="wk">Hafta 10–12</div><h3>4D + polish</h3><p>Time-dial, 1–2 portal, tesseract hub; a11y, SEO HTML layer, Lighthouse, reduced-motion, deploy (CF Pages + R2).</p></div>
+    </div>
+    <p class="kv" style="margin-top:18px">Batafsil hisobotlar: <code>docs/research/00-own-findings.md</code>, <code>01-tech-stack.md</code>, <code>02-examples-and-references.md</code>, <code>03-art-direction-ux.md</code>, <code>04-repos-tutorials-techniques.md</code>.</p>
+  </div>
+</section>
+
+<footer><div class="wrap">Research 2026-08-23 · manbalar: Awwwards, FWA, CSSDA, Codrops, Three.js forum, NN/g, Utsubo, Metabole, CreativeDevJobs, GitHub, pmndrs docs, World Labs, Chrome dev blog.</div></footer>
+
+<script>
+(function(){
+  var c=document.getElementById('tess'); if(!c) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var ctx=c.getContext('2d'); var W=c.width,H=c.height;
+  var verts=[];for(var i=0;i<16;i++){verts.push([(i&1?1:-1),(i&2?1:-1),(i&4?1:-1),(i&8?1:-1)]);}
+  var edges=[];for(var a=0;a<16;a++)for(var b=a+1;b<16;b++){var d=0;for(var k=0;k<4;k++)if(verts[a][k]!==verts[b][k])d++;if(d===1)edges.push([a,b]);}
+  function rot(v,i,j,t){var c1=Math.cos(t),s1=Math.sin(t);var r=v.slice();r[i]=v[i]*c1-v[j]*s1;r[j]=v[i]*s1+v[j]*c1;return r;}
+  function col(){return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#B8780F';}
+  var t=0;
+  function frame(){
+    t+=0.006; ctx.clearRect(0,0,W,H);
+    var pts=verts.map(function(v){
+      var p=rot(v,0,3,t*1.3);p=rot(p,1,2,t*0.9);p=rot(p,0,2,t*0.5);
+      var w=1/(2.6-p[3]);var x=p[0]*w,y=p[1]*w,z=p[2]*w;
+      var zz=1/(3.2-z);return [W*0.55+x*zz*330,H*0.5+y*zz*330,w];
+    });
+    ctx.lineWidth=1.1;var cc=col();
+    edges.forEach(function(e){var a=pts[e[0]],b=pts[e[1]];ctx.globalAlpha=0.25+0.5*Math.min(a[2],b[2]);ctx.strokeStyle=cc;ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();});
+    ctx.globalAlpha=1;
+    pts.forEach(function(p){ctx.fillStyle=cc;ctx.beginPath();ctx.arc(p[0],p[1],1.6+p[2]*2,0,6.283);ctx.fill();});
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>

@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+.env
+.env.*
+!.env.example
+# large source assets (keep optimized GLB in public/models)
+assets-src/**/*.blend1
+assets-src/**/*.blend2
