@@ -67,10 +67,31 @@ Keyin Vercel dashboard'da **Settings → Git → Ignored Build Step** ga `exit 0
 
 ---
 
+## Fikr-mulohaza himoyasi (origin allowlist)
+
+`/api/feedback` faqat o'z saytingizdan kelgan so'rovlarni qabul qiladi. Tekshiruvlar tartibi:
+
+1. **`Origin`** sarlavhasi (u bo'lmasa `Referer` ning origin'i) allowlist'da bo'lishi shart, aks holda `403 {"error":"origin"}`. Taqqoslash aniq (sxema + host + port), qism-satr yoki qo'shimcha bo'yicha emas — `4d-portfolio.vercel.app.evil.com` o'tmaydi.
+2. `Content-Type: application/json` bo'lishi shart, aks holda `415 {"error":"content-type"}`.
+3. `name`, `surname`, `message`, `meta`, `kind` satr (`photo` — satr yoki `null`) bo'lmasa `400 {"error":"invalid"}`.
+4. Bir IP'dan 10 daqiqada ko'pi bilan 5 ta so'rov, aks holda `429 {"error":"rate"}`.
+
+Allowlist: `https://4d-portfolio.vercel.app` (doim), `FEEDBACK_ALLOWED_ORIGINS` dagi qo'shimchalar, deploy'ning o'z Vercel manzillari (`VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL` — shuning uchun preview deploy'lar avtomatik ishlaydi) va faqat lokal ishlaganda (`VERCEL_ENV` yo'q yoki `development`, masalan `vercel dev`) `http://localhost:*` / `http://127.0.0.1:*`. `preview` va `production`'da localhost **rad etiladi**.
+
+| Nomi | Qiymati | Nima uchun |
+|---|---|---|
+| `FEEDBACK_ALLOWED_ORIGINS` | `https://domen.uz,https://www.domen.uz` (vergul bilan, **ixtiyoriy**) | Qo'shimcha ruxsat etilgan origin'lar |
+
+> **Custom domen ulasangiz**, uni `FEEDBACK_ALLOWED_ORIGINS` ga qo'shing (`https://` bilan, `www` ko'rinishi ham alohida) — aks holda forma `403` beradi.
+
+**Halol eslatma.** `Origin` sarlavhasini brauzer qo'yadi va boshqa veb-sayt uni soxtalashtira olmaydi — shuning uchun bu boshqa saytlardan va oddiy suiiste'moldan himoya qiladi. Lekin brauzerdan tashqari skript (`curl`, Python) istalgan sarlavhani yuborishi mumkin, shuning uchun bu **skript bilan ataylab yog'dirishdan to'liq himoya emas**. IP bo'yicha limit ham xotirada turadi: serverless nusxalari xotirani bo'lishmaydi, demak u kafolat emas, faqat pastki chegara. To'liq himoya uchun CAPTCHA (masalan Cloudflare Turnstile) yoki Vercel Firewall'da `/api/feedback` uchun rate-limit qoidasi kerak.
+
+---
+
 ## Tekshirish
 
 ```bash
-pnpm test:feedback   # relay: metod, validatsiya, XSS ekranlash, Telegram chaqiruvi
+pnpm test:feedback   # relay: metod, origin allowlist, content-type, turlar, rate limit, validatsiya, XSS ekranlash, Telegram chaqiruvi
 pnpm test:counter    # tashrif hisoblagichi shartnomasi
 BASE_PATH=/ VITE_FEEDBACK_ENDPOINT=/api/feedback pnpm build && pnpm preview
 ```
