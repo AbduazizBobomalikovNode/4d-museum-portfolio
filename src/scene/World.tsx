@@ -25,6 +25,7 @@ import { LanguageKiosk } from './LanguageKiosk'
 import { CornerGlass } from './CornerGlass'
 import { NavGlass } from './NavGlass'
 import { perfCount } from '@/lib/perfBus'
+import { Cull } from './Cull'
 
 /**
  * Door openings per room from the corridor graph.
@@ -100,9 +101,11 @@ export function World() {
         </VisibleGroup>
       ))}
       {corridors.map((c) => (
-        <Corridor key={`${c.from}-${c.to}`} a={roomById[c.from]} b={roomById[c.to]} />
+        <Cull key={`${c.from}-${c.to}`} id={[c.from, c.to]}>
+          <Corridor a={roomById[c.from]} b={roomById[c.to]} />
+        </Cull>
       ))}
-      <AtriumMezz />
+      <Cull id="atrium"><AtriumMezz /></Cull>
       <Decor />
       <ReflectiveFloor />
       {exhibits.map((e) => (
@@ -111,35 +114,39 @@ export function World() {
         </VisibleGroup>
       ))}
       {/* Tashkent clock — centred on the stair's north glass balustrade (holo-display on the pane) */}
-      <WallClock position={[-1.6, 5.85, -4.87]} />
+      <Cull id="atrium"><WallClock position={[-1.6, 5.85, -4.87]} /></Cull>
 
       {/* live GitHub profile screen — about room feature wall */}
-      <GithubLive position={[-46.7, 7.9, 0]} rotationY={Math.PI / 2} />
+      <Cull id="about"><GithubLive position={[-46.7, 7.9, 0]} rotationY={Math.PI / 2} /></Cull>
       {/* language lectern — entrance hall, north-west corner by the doorway */}
       <LanguageKiosk position={[-4.9, 0, 35.4]} rotationY={Math.atan2(4.9, 4.6)} />
 
       {/* entrance: glass screen across the north-east corner, floor-fixed, clear of ceiling and walls */}
-      <CornerGlass corner={[7, 33]} inward={[-1, 1]} distance={3.6} accent={roomById.entrance.accent}>
-        <NavGlass />
-      </CornerGlass>
+      <Cull id="entrance">
+        <CornerGlass corner={[7, 33]} inward={[-1, 1]} distance={3.6} accent={roomById.entrance.accent}>
+          <NavGlass />
+        </CornerGlass>
+      </Cull>
 
       {/* contact card + feedback form — about room, south wall */}
-      <FeedbackWall position={[-36.5, 7.9, 6.82]} rotationY={Math.PI} />
+      <Cull id="about"><FeedbackWall position={[-36.5, 7.9, 6.82]} rotationY={Math.PI} /></Cull>
 
       {/* profile README — two big screens filling the north wall: left = start, right = continuation */}
-      <GithubReadme position={[-43.35, 8.2, -6.7]} rotationY={0} page={0} />
-      <GithubReadme position={[-36.65, 8.2, -6.7]} rotationY={0} page={1} />
+      <Cull id="about">
+        <GithubReadme position={[-43.35, 8.2, -6.7]} rotationY={0} page={0} />
+        <GithubReadme position={[-36.65, 8.2, -6.7]} rotationY={0} page={1} />
+      </Cull>
 
       {/* skills: technology wall where the bot screen used to be (south wall) */}
-      <LogoWall position={[20, 2.5, 6.62]} rotationY={Math.PI} title="Texnologiyalar" />
+      <Cull id="skills"><LogoWall position={[20, 2.5, 6.62]} rotationY={Math.PI} title="Texnologiyalar" /></Cull>
 
       {/* gift shop: the CV framed beside the GitHub piece on the north wall … */}
-      <CvWall position={[44.6, 2.35, -6.62]} rotationY={0} />
+      <Cull id="contact"><CvWall position={[44.6, 2.35, -6.62]} rotationY={0} /></Cull>
       {/* … and the book shelf now filling the whole south wall, opposite it */}
-      <GiftShelf position={[40, 2.525, 6.59]} rotationY={Math.PI} />
+      <Cull id="contact"><GiftShelf position={[40, 2.525, 6.59]} rotationY={Math.PI} /></Cull>
 
       {/* atrium: famous-code gallery on the south wall, two rows — ground floor and mezzanine */}
-      <CodeWall />
+      <Cull id="atrium"><CodeWall /></Cull>
 
       {/* digital globe floats in the double-height void — Uzbekistan raised, Tashkent beacon */}
       <DigitalGlobe position={[-1.2, FLOOR2_Y + 0.8, 0]} />

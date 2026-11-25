@@ -3,6 +3,8 @@ import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { Billboard, useTexture } from '@react-three/drei'
 import { asset } from '@/lib/geo'
+import { ANISO, mkCanvas } from '@/lib/tier'
+import { Cull } from './Cull'
 
 const R = 1.6
 const DEG = Math.PI / 180
@@ -81,10 +83,7 @@ let labelTex: THREE.CanvasTexture | null = null
 /** "UZBEKISTAN" label (POT 512×128, transparent, amber glow). */
 function uzLabelTexture(): THREE.CanvasTexture {
   if (labelTex) return labelTex
-  const c = document.createElement('canvas')
-  c.width = 512
-  c.height = 128
-  const ctx = c.getContext('2d')!
+  const { canvas: c, ctx } = mkCanvas(512, 128)
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.shadowColor = '#F2B441'
@@ -99,7 +98,7 @@ function uzLabelTexture(): THREE.CanvasTexture {
   ctx.fillText('UZBEKISTAN', 256, 64)
   labelTex = new THREE.CanvasTexture(c)
   labelTex.colorSpace = THREE.SRGBColorSpace
-  labelTex.anisotropy = 8
+  labelTex.anisotropy = ANISO
   return labelTex
 }
 
@@ -119,7 +118,7 @@ function Earth({ speed }: { speed: number }) {
   const [day, lights, cloudsMap, specular] = useTexture(PLANET_TEXTURES)
   day.colorSpace = THREE.SRGBColorSpace
   lights.colorSpace = THREE.SRGBColorSpace
-  day.anisotropy = lights.anisotropy = 8
+  day.anisotropy = lights.anisotropy = ANISO
 
   // Uzbekistan patch: exact spherical projection. The polygon is triangulated in lon/lat space,
   // then every vertex is projected onto the sphere — no tangent-plane distortion. Scaled 1.35×
@@ -179,6 +178,7 @@ function Earth({ speed }: { speed: number }) {
       {/* fixed sun so the day/night terminator reads like the three.js earth example */}
       <directionalLight position={[2, 3, 9]} intensity={4.4} color="#fff4e0" />
       <ambientLight intensity={0.18} />
+      <Cull id="atrium">
       <group ref={group}>
         <mesh>
           <sphereGeometry args={[R, 64, 64]} />
@@ -226,6 +226,7 @@ function Earth({ speed }: { speed: number }) {
         <sphereGeometry args={[R * 1.045, 48, 48]} />
         <meshBasicMaterial color="#3d9fd4" transparent opacity={0.16} side={THREE.BackSide} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
+      </Cull>
     </group>
   )
 }

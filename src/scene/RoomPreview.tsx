@@ -100,7 +100,8 @@ export function RoomPreview({
     const was = wasVisible.current
     for (let k = 0; k < gs.length; k++) {
       was[k] = gs[k].visible
-      gs[k].visible = gs[k].userData.roomGate === room.id
+      const g = gs[k].userData.roomGate as string | string[]
+      gs[k].visible = Array.isArray(g) ? g.includes(room.id) : g === room.id
     }
     // the board must not appear inside its own entrance card
     const board = boardRef.current ?? (boardRef.current = scene.getObjectByName('nav-board') ?? null)

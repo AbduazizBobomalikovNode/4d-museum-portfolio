@@ -4,10 +4,12 @@ import { useTexture } from '@react-three/drei'
 import { STACK_BADGES, logoBadgeTexture } from '@/lib/techlogos'
 import { circuitTexture, codeTexture, contribTexture, numberTexture, quoteTexture, signTexture, wordmarkTexture, yearsTexture } from '@/lib/poster'
 import { corridors, roomById, rooms, DOOR_HEIGHT } from '@/data/rooms'
-import type { Room } from '@/data/types'
+import type { Room, RoomId } from '@/data/types'
 import { useLang } from '@/lib/useT'
 import { pick } from '@/lib/i18n'
 import { UNIT_BOX, asset } from '@/lib/geo'
+import { ANISO } from '@/lib/tier'
+import { Cull } from './Cull'
 
 
 function LogoBadge({ logo, position, rotationY, size = 1.15 }: {
@@ -83,7 +85,7 @@ useTexture.preload(asset('textures/portrait.jpg'))
 function PortraitFace() {
   const tex = useTexture(asset('textures/portrait.jpg'))
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
+  tex.anisotropy = ANISO
   return <meshStandardMaterial map={tex} emissive="#ffffff" emissiveMap={tex} emissiveIntensity={0.32} roughness={0.85} />
 }
 
@@ -91,6 +93,7 @@ function PortraitFace() {
 function Portrait({ position, rotationY }: { position: [number, number, number]; rotationY: number }) {
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
+      <Cull id="about">
       {/* outer frame + inner mat, like the exhibit frames */}
       <mesh castShadow geometry={UNIT_BOX} scale={[3.8, 3.8, 0.12]} dispose={null}>        <meshStandardMaterial color="#1a1b20" roughness={0.55} metalness={0.15} />
       </mesh>
@@ -106,6 +109,8 @@ function Portrait({ position, rotationY }: { position: [number, number, number];
       </mesh>
       {/* picture light */}
       <object3D name="portrait-target" position={[0, 0, 0]} />
+      </Cull>
+      {/* the light stays outside the Cull (a hidden light would change the light count) */}
       <pointLight position={[0, 2.4, 1.4]} intensity={9} distance={7} decay={2} color="#FFE2B8" />
     </group>
   )
@@ -171,44 +176,52 @@ export function Decor() {
 
   return (
     <group name="decor">
-      {badgeMeshes.map((b) => (
-        <LogoBadge key={b.logo.name} {...b} />
-      ))}
+      <Cull id="skills">
+        {badgeMeshes.map((b) => (
+          <LogoBadge key={b.logo.name} {...b} />
+        ))}
+      </Cull>
 
       {/* atrium code murals: F1 north & west walls (doors there are at mezzanine level) */}
-      <CodePanel position={[atrium.center[0] - 5.5, 2.6, atrium.center[1] - atrium.size[1] / 2 + 0.18]} rotationY={0} w={6} h={3.4} seed={1} />
-      <CodePanel position={[atrium.center[0] + 5.5, 2.6, atrium.center[1] - atrium.size[1] / 2 + 0.18]} rotationY={0} w={6} h={3.4} seed={2} />
-      <CodePanel position={[atrium.center[0] - atrium.size[0] / 2 + 0.18, 2.6, atrium.center[1] + 4.5]} rotationY={Math.PI / 2} w={6} h={3.4} seed={3} />
+      <Cull id="atrium">
+        <CodePanel position={[atrium.center[0] - 5.5, 2.6, atrium.center[1] - atrium.size[1] / 2 + 0.18]} rotationY={0} w={6} h={3.4} seed={1} />
+        <CodePanel position={[atrium.center[0] + 5.5, 2.6, atrium.center[1] - atrium.size[1] / 2 + 0.18]} rotationY={0} w={6} h={3.4} seed={2} />
+        <CodePanel position={[atrium.center[0] - atrium.size[0] / 2 + 0.18, 2.6, atrium.center[1] + 4.5]} rotationY={Math.PI / 2} w={6} h={3.4} seed={3} />
+      </Cull>
 
       {/* wayfinding signs above every door, both directions */}
       {corridors.map((c) => (
         <group key={`sign-${c.from}-${c.to}`}>
-          <DoorSign room={roomById[c.from]} other={roomById[c.to]} />
-          <DoorSign room={roomById[c.to]} other={roomById[c.from]} />
+          <Cull id={c.from}><DoorSign room={roomById[c.from]} other={roomById[c.to]} /></Cull>
+          <Cull id={c.to}><DoorSign room={roomById[c.to]} other={roomById[c.from]} /></Cull>
         </group>
       ))}
 
       {/* hall numbers */}
       {numberMurals.map((m) => (
-        <Mural key={m.key} tex={m.tex} position={m.position} rotationY={m.rotationY} w={2.2} h={2.2} intensity={0.35} />
+        <Cull key={m.key} id={m.key as RoomId}><Mural tex={m.tex} position={m.position} rotationY={m.rotationY} w={2.2} h={2.2} intensity={0.35} /></Cull>
       ))}
 
       {/* entrance: wordmark banner (east wall) */}
-      <Mural tex={wordmarkTexture()} {...sideXform(entrance, 'e', 0, entrance.floorY + 2.5)} w={5.4} h={1.35} intensity={0.45} />
+      <Cull id="entrance"><Mural tex={wordmarkTexture()} {...sideXform(entrance, 'e', 0, entrance.floorY + 2.5)} w={5.4} h={1.35} intensity={0.45} /></Cull>
 
       {/* contact: GitHub contribution graph (south wall) */}
-      <Mural tex={contribTexture()} {...sideXform(contact, 's', 0, contact.floorY + 2.2)} w={4.4} h={2.2} intensity={0.5} />
+      <Cull id="contact"><Mural tex={contribTexture()} {...sideXform(contact, 's', 0, contact.floorY + 2.2)} w={4.4} h={2.2} intensity={0.5} /></Cull>
 
       {/* experiments: circuit boards flanking the south door */}
-      <Mural tex={circuitTexture(5)} {...sideXform(experiments, 's', -4.5, experiments.floorY + 2.5)} w={3} h={3} intensity={0.45} />
-      <Mural tex={circuitTexture(9)} {...sideXform(experiments, 's', 4.5, experiments.floorY + 2.5)} w={3} h={3} intensity={0.45} />
+      <Cull id="experiments">
+        <Mural tex={circuitTexture(5)} {...sideXform(experiments, 's', -4.5, experiments.floorY + 2.5)} w={3} h={3} intensity={0.45} />
+        <Mural tex={circuitTexture(9)} {...sideXform(experiments, 's', 4.5, experiments.floorY + 2.5)} w={3} h={3} intensity={0.45} />
+      </Cull>
 
       {/* timeline: year band above the frames on both long walls */}
-      <Mural tex={yearsTexture()} {...sideXform(timeline, 'n', 0, timeline.floorY + 3.6)} w={11} h={1.4} intensity={0.5} />
-      <Mural tex={yearsTexture()} {...sideXform(timeline, 's', 0, timeline.floorY + 3.6)} w={11} h={1.4} intensity={0.5} />
+      <Cull id="timeline">
+        <Mural tex={yearsTexture()} {...sideXform(timeline, 'n', 0, timeline.floorY + 3.6)} w={11} h={1.4} intensity={0.5} />
+        <Mural tex={yearsTexture()} {...sideXform(timeline, 's', 0, timeline.floorY + 3.6)} w={11} h={1.4} intensity={0.5} />
+      </Cull>
 
       {/* about: quote mural (south wall) */}
-      <Mural tex={quoteTexture()} {...sideXform(about, 'w', 4.6, about.floorY + 1.75)} w={4.2} h={2.1} intensity={0.4} />
+      <Cull id="about"><Mural tex={quoteTexture()} {...sideXform(about, 'w', 4.6, about.floorY + 1.75)} w={4.2} h={2.1} intensity={0.4} /></Cull>
 
       {/* about: GitHub portrait — south wall, beside the quote */}
       <Portrait position={[about.center[0] - 4.0, about.floorY + 2.3, about.center[1] + about.size[1] / 2 - 0.18]} rotationY={Math.PI} />

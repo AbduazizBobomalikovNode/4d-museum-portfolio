@@ -4,6 +4,8 @@ import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { LANGS, LANG_META, tr, type Lang } from '@/lib/i18n'
 import { useStore } from '@/state/store'
 import { UNIT_BOX } from '@/lib/geo'
+import { ANISO, mkCanvas } from '@/lib/tier'
+import { Cull } from './Cull'
 
 const W = 1024
 const H = 1024
@@ -37,13 +39,10 @@ export function LanguageKiosk({ position, rotationY = 0 }: { position: [number, 
   const flash = useRef(0)
 
   const { tex, ctx } = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = W
-    canvas.height = H
-    const ctx = canvas.getContext('2d')!
+    const { canvas, ctx } = mkCanvas(W, H)
     const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace
-    tex.anisotropy = 8
+    tex.anisotropy = ANISO
     return { tex, ctx }
   }, [])
 
@@ -150,6 +149,7 @@ export function LanguageKiosk({ position, rotationY = 0 }: { position: [number, 
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
+      <Cull id="entrance">
       {/* plinth */}
       <mesh castShadow receiveShadow position={[0, 0.52, 0]} geometry={UNIT_BOX} scale={[0.95, 1.04, 0.6]} dispose={null}>        <meshStandardMaterial color="#16181e" roughness={0.45} metalness={0.5} />
       </mesh>
@@ -186,6 +186,8 @@ export function LanguageKiosk({ position, rotationY = 0 }: { position: [number, 
         <torusGeometry args={[0.1, 0.012, 8, 32]} />
         <meshStandardMaterial color="#5DE4FF" emissive="#5DE4FF" emissiveIntensity={1.2} toneMapped={false} />
       </mesh>
+      </Cull>
+      {/* lights stay outside the Cull: a hidden light changes the light count and recompiles every material */}
       <pointLight position={[0, 1.8, 0.6]} intensity={4} distance={3.6} decay={2} color="#5DE4FF" />
     </group>
   )
