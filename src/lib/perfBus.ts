@@ -15,3 +15,14 @@ export function perfEvent(name: string, detail?: Record<string, unknown>): void 
 export function perfCount(name: string): void {
   if (perfMode && hook) hook('count:' + name)
 }
+
+/** perf mode only: every 2D canvas created, with the time and its backing-store size (pixels painted before the gate etc.). */
+export const canvasLog: { t: number; px: number }[] = []
+if (perfMode && typeof HTMLCanvasElement !== 'undefined') {
+  const seen = new WeakSet<HTMLCanvasElement>()
+  const orig = HTMLCanvasElement.prototype.getContext
+  HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, ...a: Parameters<typeof orig>) {
+    if (a[0] === '2d' && !seen.has(this)) { seen.add(this); canvasLog.push({ t: performance.now(), px: this.width * this.height }) }
+    return (orig as (...x: unknown[]) => unknown).apply(this, a)
+  } as typeof orig
+}

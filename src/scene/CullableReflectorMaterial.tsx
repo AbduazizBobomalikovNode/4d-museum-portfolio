@@ -1,5 +1,6 @@
 import * as React from 'react'
 import * as THREE from 'three'
+import { perfFlags } from '@/lib/perfFlags'
 import { extend, useFrame, useThree } from '@react-three/fiber'
 import type { MeshReflectorMaterial as DreiReflector } from '@react-three/drei'
 import { BlurPass } from '@react-three/drei/materials/BlurPass.js'
@@ -155,6 +156,20 @@ export const CullableReflectorMaterial = React.forwardRef<React.ElementRef<typeo
     }
     return [fbo1, fbo2, blurpass, reflectorProps] as const
   }, [gl, blurX, blurY, textureMatrix, resolution, mirror, hasBlur, mixBlur, mixStrength, minDepthThreshold, maxDepthThreshold, depthScale, depthToBlurRatioBias, distortion, distortionMap, mixContrast])
+
+  // reflectorDispose: drei never frees these, so every rail<->walk cycle leaked 2 colour targets, a depth
+  // texture and the blur pass's pair (~5 textures + their GPU memory)
+  React.useEffect(() => {
+    if (!perfFlags.reflectorDispose) return
+    return () => {
+      fbo1.depthTexture?.dispose()
+      fbo1.dispose()
+      fbo2.dispose()
+      blurpass.renderTargetA.dispose()
+      blurpass.renderTargetB.dispose()
+      blurpass.convolutionMaterial.dispose()
+    }
+  }, [fbo1, fbo2, blurpass])
 
   useFrame(() => {
     const parent = materialRef.current.parent || materialRef.current?.__r3f?.parent?.object

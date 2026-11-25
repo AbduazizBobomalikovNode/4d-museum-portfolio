@@ -30,6 +30,22 @@ const MONITOR_GRACE_MS = 4000
 const PREFETCH_DELAY_MS = 6000
 
 /**
+ * prefetchRapier: @react-three/rapier loads rapier's JS shell with its own dynamic import(), a separate tiny
+ * chunk that otherwise costs one more round trip on the first press of M. Its hashed file name is only known
+ * to the built PhysicsWorld chunk, so read it from there (production builds only; any failure is ignored).
+ */
+function warmRapierChunk() {
+  try {
+    const entry = performance.getEntriesByType('resource').find((r) => /\/PhysicsWorld-[\w-]+\.js/.test(r.name))
+    if (!entry) return
+    void fetch(entry.name).then((r) => r.text()).then((src) => {
+      const m = /["'`](?:\.\/)?(rapier-[\w-]+\.js)["'`]/.exec(src)
+      if (m) return import(/* @vite-ignore */ new URL(m[1], entry.name).href)
+    }).catch(() => {})
+  } catch { /* best effort */ }
+}
+
+/**
  * prefetchPhysics: the rapier chunk (~850 kB gz with its WASM) is otherwise fetched on the first
  * press of M, a visible wait. Once the visitor is inside and the scene is settled, pull it into the
  * module cache in idle time. Skipped on Save-Data / 2G links. Same `import()` as the lazy() above,
@@ -46,7 +62,10 @@ function PhysicsPrefetch() {
     const run = () => {
       if (cancelled) return
       perfEvent('physics-prefetch-start')
-      loadPhysics().then(() => perfEvent('physics-prefetch-done'), () => { /* offline: M will retry the import */ })
+      loadPhysics().then(() => {
+        perfEvent('physics-prefetch-done')
+        if (perfFlags.prefetchRapier) warmRapierChunk()
+      }, () => { /* offline: M will retry the import */ })
     }
     const timer = window.setTimeout(() => {
       if ('requestIdleCallback' in window) idle = window.requestIdleCallback(run, { timeout: 8000 })

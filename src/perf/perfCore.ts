@@ -6,7 +6,7 @@
  */
 import { useStore } from '@/state/store'
 import { perfFlags } from '@/lib/perfFlags'
-import { setPerfHook } from '@/lib/perfBus'
+import { setPerfHook, canvasLog } from '@/lib/perfBus'
 
 const WINDOW = 120 // frames used for the "recent" render-info averages
 const MAX_FRAMES = 200000
@@ -36,7 +36,7 @@ let measures: Measure[] = []
 let toggles: Toggle[] = []
 let counts: Record<string, number> = {}
 let trans: Trans[] = []
-const ctx = { cam: [0, 0, 0, 0, 0, 0], dpr: 0, w: 0, h: 0, geometries: 0, textures: 0, programs: 0, lines: 0, points: 0 }
+const ctx = { texBytes: 0, rtBytes: 0, lights: 0, cam: [0, 0, 0, 0, 0, 0], dpr: 0, w: 0, h: 0, geometries: 0, textures: 0, programs: 0, lines: 0, points: 0 }
 const t0 = now()
 
 let pendingToggle: Toggle | null = null
@@ -113,6 +113,8 @@ export function recordFrame(dt: number, info: { calls: number; triangles: number
   }
 }
 
+export function setMem(texBytes: number, rtBytes: number, lights: number) { ctx.texBytes = texBytes; ctx.rtBytes = rtBytes; ctx.lights = lights }
+
 export function setCtx(dpr: number, w: number, h: number, cam?: number[]) { ctx.dpr = dpr; ctx.w = w; ctx.h = h; if (cam) ctx.cam = cam }
 
 function stats(arr: number[]) {
@@ -156,6 +158,13 @@ export function snapshot() {
     counts: { ...counts },
     transitions: trans.map((x) => ({ ...x })),
     paint: paints,
+    memory: { textureMB: r2(ctx.texBytes / 1048576), renderTargetMB: r2(ctx.rtBytes / 1048576), lights: ctx.lights },
+    canvas2d: (() => {
+      const gate = markTime('gate-ready') ?? Infinity
+      const before = canvasLog.filter((c) => c.t <= gate)
+      const sum = (a: { px: number }[]) => a.reduce((x, c) => x + c.px, 0)
+      return { count: canvasLog.length, totalMpx: r2(sum(canvasLog) / 1e6), beforeGateCount: before.length, beforeGateMpx: r2(sum(before) / 1e6) }
+    })(),
     requests: { count: res.length, bytes: res.reduce((a, r) => a + (r.transferSize || 0), 0) },
     quality: s.quality, mode: s.mode, room: s.room, phase: s.phase,
     dpr: ctx.dpr, canvas: { w: ctx.w, h: ctx.h }, camera: ctx.cam.map(r2), railU: r2(useStore.getState().railU),
