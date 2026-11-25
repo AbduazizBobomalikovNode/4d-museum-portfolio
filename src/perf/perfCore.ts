@@ -31,6 +31,7 @@ let tris: number[] = []
 let maxCalls = 0
 let maxTris = 0
 let longtasks: LongTask[] = []
+let loaf: Record<string, unknown>[] = []
 let marks: Mark[] = []
 let measures: Measure[] = []
 let toggles: Toggle[] = []
@@ -154,6 +155,7 @@ export function snapshot() {
       geometries: ctx.geometries, textures: ctx.textures, programs: ctx.programs,
     },
     slowFrames: slow.map((x) => ({ ...x })),
+    loaf: loaf.map((x) => ({ ...x })),
     longtasks: longtasks.map((l) => ({ ...l })),
     longtaskTotalMs: r2(longtasks.reduce((a, l) => a + l.duration, 0)),
     marks: marks.map((m) => ({ ...m })),
@@ -181,6 +183,7 @@ export function reset() {
   frames = []; calls = []; tris = []; maxCalls = 0; maxTris = 0
   longtasks = []
   slow = []
+  loaf = []
 }
 
 function overlay() {
@@ -218,6 +221,25 @@ export function install() {
     })
     po.observe({ type: 'longtask', buffered: true })
   } catch { /* longtask unsupported */ }
+
+  try {
+    // long-animation-frame (Chrome 123+): says whether a slow frame was script, style/layout or rendering, and which function
+    const lo = new PerformanceObserver((list) => {
+      for (const e of list.getEntries() as unknown as {
+        startTime: number; duration: number; blockingDuration: number; renderStart: number; styleAndLayoutStart: number
+        scripts: { invoker: string; invokerType: string; duration: number; sourceFunctionName: string; sourceURL: string; sourceCharPosition: number; forcedStyleAndLayoutDuration: number }[]
+      }[]) {
+        const top = [...e.scripts].sort((a, b) => b.duration - a.duration)[0]
+        loaf.push({
+          t: r2(e.startTime), dur: r2(e.duration), blocking: r2(e.blockingDuration),
+          scriptMs: r2(e.scripts.reduce((a, x) => a + x.duration, 0)), renderMs: r2(e.startTime + e.duration - e.renderStart),
+          styleLayoutMs: r2(e.startTime + e.duration - e.styleAndLayoutStart),
+          top: top ? { inv: top.invoker, fn: top.sourceFunctionName, pos: top.sourceCharPosition, ms: r2(top.duration), forced: r2(top.forcedStyleAndLayoutDuration), url: top.sourceURL.split('/').pop() } : null,
+        })
+      }
+    })
+    lo.observe({ type: 'long-animation-frame', buffered: true })
+  } catch { /* unsupported */ }
 
   setPerfHook((name, detail) => {
     if (name.startsWith('count:')) { const k = name.slice(6); counts[k] = (counts[k] ?? 0) + 1; return }

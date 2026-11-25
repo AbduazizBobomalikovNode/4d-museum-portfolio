@@ -14,6 +14,7 @@ import { EscapeLadder } from './EscapeLadder'
 import { perfFlags, perfMode } from '@/lib/perfFlags'
 import { BodyContext, StableBody } from './physics/BodyContext'
 import { perfEvent } from '@/lib/perfBus'
+import { warmAllVariants } from '@/lib/warm'
 import { flushCritical, openGate, prewarmScene, setAssetRenderer } from '@/lib/assets'
 
 const DEBUG = import.meta.env.VITE_DEBUG === '1' || import.meta.env.DEV
@@ -110,6 +111,7 @@ function ReadyProbe() {
         } else r.compile(scene, camera)
       } catch { /* compile is best-effort */ }
       if (cancelled) return
+      if (perfFlags.prewarm) warmAllVariants(gl as THREE.WebGLRenderer, scene, camera, useStore.getState().quality)
       setWarmup(false)
       setPhase('gate')
       openGate() // the rest of the assets now load in idle slices, nearest room first

@@ -1,4 +1,4 @@
-import { perfFlags } from './perfFlags'
+import { perfFlags, perfMode } from './perfFlags'
 
 export type Quality = 'low' | 'medium' | 'high'
 
@@ -22,6 +22,11 @@ export function isMobileDevice(): boolean {
 /** Cheap heuristic tier. Replace/augment with detect-gpu later. */
 export function detectQuality(): Quality {
   if (typeof navigator === 'undefined') return 'medium'
+  // ?perf=1&tier=low|medium|high: measurement sessions can pin a tier (ignored without ?perf=1)
+  if (perfMode) {
+    const forced = new URLSearchParams(location.search).get('tier')
+    if (forced === 'low' || forced === 'medium' || forced === 'high') return forced
+  }
   const nav = navigator as Navigator & { deviceMemory?: number }
   const cores = nav.hardwareConcurrency ?? 4
   const mem = nav.deviceMemory ?? 4

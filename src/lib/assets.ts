@@ -4,6 +4,7 @@ import { useTexture } from '@react-three/drei'
 import { perfFlags } from './perfFlags'
 import { perfEvent } from './perfBus'
 import { roomEntryU } from './rail'
+import { neighbours } from '@/data/rooms'
 import { MAX_IMAGE_SIDE, ANISO, mkCanvas } from './tier'
 import { useStore } from '@/state/store'
 import type { RoomId } from '@/data/types'
@@ -39,6 +40,13 @@ const roomReady = new Set<string>()
 const readyListeners = new Set<(room: RoomId) => void>()
 let renderer: THREE.WebGLRenderer | null = null
 const initQueue: THREE.Texture[] = []
+const initRoom = new WeakMap<THREE.Texture, RoomId | null>()
+/** A single upload above this (RGBA + mips) is a 50-200 ms main-thread stall that cannot be split. */
+const HEAVY_BYTES = 8 * 1024 * 1024
+const texBytes = (t: THREE.Texture) => {
+  const im = t.image as { width?: number; height?: number } | undefined
+  return im?.width && im.height ? im.width * im.height * 4 * 1.34 : 0
+}
 
 /** 2x2 stand-in image shared by every deferred texture. */
 let tiny: HTMLCanvasElement | null = null
@@ -132,24 +140,52 @@ function finish(t: Task) {
   }
 }
 
+/** Own-clock budget for one idle slice (ms): the gate screen is idle, so it may work longer than live rendering. */
+const sliceBudget = () => (useStore.getState().phase === 'live' ? 9 : 24)
+
 function slice(dl: { timeRemaining: () => number; didTimeout: boolean }) {
   scheduled = false
+  const start = performance.now()
+  const budget = Math.min(sliceBudget(), dl.didTimeout ? 9 : Math.max(9, dl.timeRemaining()))
   let ran = 0
-  while (queue.length && running < MAX_ASYNC && (ran === 0 || dl.timeRemaining() > 8)) {
+  // queued work first (paint / fetch). `timeRemaining` is only advisory and is not checked inside a task, so
+  // the slice also keeps its own clock; at least one unit always runs so the queue cannot starve.
+  while (queue.length && running < MAX_ASYNC && (ran === 0 || performance.now() - start < budget)) {
     const t = pickNext()
     ran++
     running++
+    const t1 = performance.now()
     let p: Promise<void> | void
     try { p = t.run() } catch { p = undefined }
+    const ms = performance.now() - t1
+    if (ms > 12) perfEvent('asset-task', { room: t.room, ms: Math.round(ms) })
     void Promise.resolve(p).catch(() => {}).finally(() => { running--; finish(t); pump() })
   }
-  while (initQueue.length && renderer && dl.timeRemaining() > 6) {
-    try { renderer.initTexture(initQueue.shift()!) } catch { /* disposed meanwhile */ }
+  // then GPU pre-uploads, one at a time: a big canvas upload (+ mip chain) is 10-40 ms and cannot be split
+  // Heavy uploads are done while the visitor is still on the gate screen; once live they wait until the visitor
+  // is in (or next to) that texture's room, so a stall never lands in the middle of an unrelated walk.
+  const live = useStore.getState().phase === 'live'
+  const room = useStore.getState().roomId
+  const pickInit = () => {
+    if (!live) return initQueue.length ? 0 : -1
+    return initQueue.findIndex((t) => {
+      if (texBytes(t) <= HEAVY_BYTES) return true
+      const r = initRoom.get(t)
+      return !!r && (r === room || neighbours[room].includes(r))
+    })
   }
-  if (!queue.length && running === 0 && !initQueue.length && !settledFlag) {
+  for (let i = pickInit(); i >= 0 && renderer && (ran === 0 || performance.now() - start < budget); i = pickInit()) {
+    const t1 = performance.now()
+    try { renderer.initTexture(initQueue.splice(i, 1)[0]) } catch { /* disposed meanwhile */ }
+    const ms = performance.now() - t1
+    ran++
+    if (ms > 12) perfEvent('asset-init', { ms: Math.round(ms) })
+  }
+  const more = pickInit() >= 0
+  if (!queue.length && running === 0 && !more && !settledFlag) {
     settledFlag = true
     perfEvent('assets-drained')
-  } else if (queue.length || initQueue.length) pump()
+  } else if (queue.length || more) pump()
 }
 
 function pump(soon = false) {
@@ -205,11 +241,11 @@ export function deferUpload(tex: THREE.Texture, canvas: HTMLCanvasElement, room:
 
 // ---- image textures (CV page, book covers, portrait) ----
 
-function capped(bmp: ImageBitmap | HTMLImageElement): HTMLCanvasElement | HTMLImageElement | ImageBitmap {
+function capped(bmp: ImageBitmap | HTMLImageElement, forceCanvas = false): HTMLCanvasElement | HTMLImageElement | ImageBitmap {
   const w = (bmp as ImageBitmap).width
   const h = (bmp as ImageBitmap).height
   const k = Math.min(1, MAX_IMAGE_SIDE / Math.max(w, h))
-  if (k >= 1) return bmp
+  if (k >= 1 && !forceCanvas) return bmp
   const c = document.createElement('canvas')
   c.width = Math.max(1, Math.round(w * k))
   c.height = Math.max(1, Math.round(h * k))
@@ -231,9 +267,17 @@ function lazyImage(url: string, room: RoomId): LazyImg {
   lazyImgs.set(url, e)
   const entry = e
   defer(room, async () => {
-    const blob = await (await fetch(url)).blob()
-    const bmp = await createImageBitmap(blob)
-    swapImage(tex, capped(bmp))
+    if (MAX_IMAGE_SIDE < 4096) {
+      // low tier: decode, then downscale through a canvas (a canvas image gets three's normal flipY)
+      const bmp = await createImageBitmap(await (await fetch(url)).blob())
+      swapImage(tex, capped(bmp, true))
+    } else {
+      // a plain <img> keeps three's default orientation and costs no extra copy (an ImageBitmap would need flipY at decode)
+      const img = new Image()
+      img.src = url
+      await img.decode()
+      swapImage(tex, img)
+    }
     entry.loaded = true
     entry.subs.forEach((f) => f())
   })
@@ -353,7 +397,8 @@ export function prewarmScene(scene: THREE.Scene) {
   })
   const here = roomEntryU[useStore.getState().roomId] ?? 0
   const list = [...seen.entries()].sort((a, b) => Math.abs((a[1] ? roomEntryU[a[1]] ?? 0 : 0) - here) - Math.abs((b[1] ? roomEntryU[b[1]] ?? 0 : 0) - here))
-  for (const [t] of list) if (!initQueue.includes(t)) initQueue.push(t)
+  list.sort((a, b) => Number(texBytes(b[0]) > HEAVY_BYTES) - Number(texBytes(a[0]) > HEAVY_BYTES)) // heavy first: they go during the gate
+  for (const [t, r] of list) { initRoom.set(t, r); if (!initQueue.includes(t)) initQueue.push(t) }
   perfEvent('prewarm-queued', { textures: list.length })
   pump()
 }

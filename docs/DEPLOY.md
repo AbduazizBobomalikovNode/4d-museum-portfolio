@@ -87,7 +87,7 @@ Allowlist: `https://4d-portfolio.vercel.app` (doim), `FEEDBACK_ALLOWED_ORIGINS` 
 ## Ish unumdorligini o'lchash / o'chirish kalitlari
 
 - `?perf=1` — o'lchov rejimi: chap-pastda kichik panel (fps, p95, draw calls, triangles, programs, textures) va `window.__perf.snapshot()` / `window.__perf.reset()`. Bu rejimda tashrif/like hisoblagichlari **oshirilmaydi** (faqat o'qiladi). `?perf=1` bo'lmasa hech narsa yuklanmaydi.
-- `?opt=off` — barcha optimizatsiyalar o'chadi (avvalgi xatti-harakat). `?optOff=stableTree,reflectorCull` — faqat nomi aytilganlari. Kalitlar: `stableTree`, `prefetchPhysics`, `reflectorCull`, `previewCull`, `monitorAfterEnter`, `noPreserveBuffer` (`src/lib/perfFlags.ts`).
+- `?opt=off` — barcha optimizatsiyalar o'chadi (avvalgi xatti-harakat). `?optOff=stableTree,reflectorCull` — faqat nomi aytilganlari. Kalitlar: `stableTree`, `prefetchPhysics`, `reflectorCull`, `previewCull`, `monitorAfterEnter`, `noPreserveBuffer`, `reflectorDispose`, `prefetchRapier`, `cullAll`, `tierTuning`, `lazyAssets`, `prewarm` (`src/lib/perfFlags.ts`). `?perf=1&tier=low|medium|high` o'lchov sessiyasida tier'ni qotiradi.
 
 ---
 

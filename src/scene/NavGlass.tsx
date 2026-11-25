@@ -9,6 +9,7 @@ import { useStore } from '@/state/store'
 import { onCounts, readCounts, trackRoom, trackVisit, type Counts } from '@/lib/counter'
 import { RoomPreview } from './RoomPreview'
 import { ANISO, mkCanvas } from '@/lib/tier'
+import { perfEvent } from '@/lib/perfBus'
 import { memoOnce } from '@/lib/assets'
 
 const W = 2048
@@ -172,6 +173,7 @@ export function NavGlass({ position = [0, 0, 0], rotationY = 0, width = 3.8, hei
   }), [])
 
   const paint = useCallback(() => {
+    const t0 = performance.now()
     ctx.clearRect(0, 0, W, H)
     // headline band
     ctx.fillStyle = 'rgba(11,14,20,0.72)'
@@ -245,6 +247,7 @@ export function NavGlass({ position = [0, 0, 0], rotationY = 0, width = 3.8, hei
       }
     })
     tex.needsUpdate = true
+    perfEvent('nav-paint', { ms: Math.round((performance.now() - t0) * 10) / 10, room: current })
   }, [ctx, tex, lang, current, counts])
 
   // repaint on hover/lang/room changes, plus once more when the webfonts land
