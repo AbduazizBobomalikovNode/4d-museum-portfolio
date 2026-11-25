@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import type * as THREE from 'three'
+import * as THREE from 'three'
 import { recordFrame, setCtx } from './perfCore'
 
 /**
@@ -10,7 +10,7 @@ import { recordFrame, setCtx } from './perfCore'
  * and resets them.
  */
 export default function PerfProbe() {
-  const { gl } = useThree()
+  const { gl, camera } = useThree()
   useEffect(() => {
     const g = gl as THREE.WebGLRenderer
     g.info.autoReset = false
@@ -36,7 +36,10 @@ export default function PerfProbe() {
     }
     last.current = t
     g.info.reset()
-    if ((n.current++ & 31) === 0) setCtx(g.getPixelRatio(), g.domElement.width, g.domElement.height)
+    if ((n.current++ & 7) === 0) {
+      const d = camera.getWorldDirection(new THREE.Vector3())
+      setCtx(g.getPixelRatio(), g.domElement.width, g.domElement.height, [camera.position.x, camera.position.y, camera.position.z, d.x, d.y, d.z])
+    }
   }, -1000)
   return null
 }

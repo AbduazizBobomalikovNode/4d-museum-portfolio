@@ -36,7 +36,7 @@ let measures: Measure[] = []
 let toggles: Toggle[] = []
 let counts: Record<string, number> = {}
 let trans: Trans[] = []
-const ctx = { dpr: 0, w: 0, h: 0, geometries: 0, textures: 0, programs: 0, lines: 0, points: 0 }
+const ctx = { cam: [0, 0, 0, 0, 0, 0], dpr: 0, w: 0, h: 0, geometries: 0, textures: 0, programs: 0, lines: 0, points: 0 }
 const t0 = now()
 
 let pendingToggle: Toggle | null = null
@@ -113,7 +113,7 @@ export function recordFrame(dt: number, info: { calls: number; triangles: number
   }
 }
 
-export function setCtx(dpr: number, w: number, h: number) { ctx.dpr = dpr; ctx.w = w; ctx.h = h }
+export function setCtx(dpr: number, w: number, h: number, cam?: number[]) { ctx.dpr = dpr; ctx.w = w; ctx.h = h; if (cam) ctx.cam = cam }
 
 function stats(arr: number[]) {
   const n = arr.length
@@ -158,7 +158,7 @@ export function snapshot() {
     paint: paints,
     requests: { count: res.length, bytes: res.reduce((a, r) => a + (r.transferSize || 0), 0) },
     quality: s.quality, mode: s.mode, room: s.room, phase: s.phase,
-    dpr: ctx.dpr, canvas: { w: ctx.w, h: ctx.h },
+    dpr: ctx.dpr, canvas: { w: ctx.w, h: ctx.h }, camera: ctx.cam.map(r2), railU: r2(useStore.getState().railU),
     flags: { ...perfFlags },
   }
 }
@@ -251,7 +251,15 @@ export function install() {
   waitGate()
 
   const w = window as unknown as { __perf: unknown }
-  w.__perf = { snapshot, reset, flags: perfFlags }
+  // scripted driving for measurement sessions (perf mode only)
+  const drive = {
+    enter: (sound = false) => useStore.getState().enter(sound),
+    toggle: () => useStore.getState().toggleMode(),
+    teleport: (id: string) => useStore.getState().teleport(id as never),
+    setRail: (u: number) => { const st = useStore.getState(); st.setRailTarget(u); st.setRailU(u) },
+    quality: () => useStore.getState().quality,
+  }
+  w.__perf = { snapshot, reset, flags: perfFlags, drive }
   if (document.body) overlay()
   else document.addEventListener('DOMContentLoaded', overlay)
 }
