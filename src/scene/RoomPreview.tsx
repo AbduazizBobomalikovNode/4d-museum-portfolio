@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { rooms } from '@/data/rooms'
+import { perfFlags } from '@/lib/perfFlags'
+import { boxMaybeInView } from '@/lib/viewCull'
 
 const RT_W = 384
 const RT_H = 216
@@ -54,6 +56,7 @@ export function RoomPreview({
   const wasVisible = useRef<boolean[]>([])
   const drawn = useRef(false)
   const boardRef = useRef<THREE.Object3D | null>(null)
+  const boardBox = useRef<THREE.Box3 | null>(null)
 
   useFrame((state) => {
     tick.current++
@@ -63,6 +66,19 @@ export function RoomPreview({
     // every card gets one still even where motion is off (low tier, or away from the
     // entrance); without it those cards would stay black
     if (drawn.current && !active) return
+    // previewCull: the board is one glass pane in the entrance hall. While it is outside the
+    // view (other end of the hall, looking away, another room) nobody can see the shots, so skip
+    // the pass. Wide slack: the stills resume a few frames before the board scrolls back in.
+    if (drawn.current && perfFlags.previewCull) {
+      if (!boardBox.current) {
+        const glass = scene.getObjectByName('nav-glass')
+        if (glass) {
+          glass.updateWorldMatrix(true, false)
+          boardBox.current = new THREE.Box3().setFromObject(glass).expandByScalar(0.3)
+        }
+      }
+      if (boardBox.current && !boxMaybeInView(state.camera, boardBox.current, 1.6)) return
+    }
 
     const t = state.clock.elapsedTime * ORBIT + slot * 1.9
     const radius = Math.min(room.size[0], room.size[1]) * 0.3
