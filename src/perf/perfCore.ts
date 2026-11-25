@@ -35,6 +35,8 @@ let marks: Mark[] = []
 let measures: Measure[] = []
 let toggles: Toggle[] = []
 let counts: Record<string, number> = {}
+let slow: { t: number; dt: number; room: string; dProg: number; dTex: number; dGeo: number; calls: number }[] = []
+let prevMem = { p: 0, t: 0, g: 0 }
 let trans: Trans[] = []
 const ctx = { texBytes: 0, rtBytes: 0, lights: 0, cam: [0, 0, 0, 0, 0, 0], dpr: 0, w: 0, h: 0, geometries: 0, textures: 0, programs: 0, lines: 0, points: 0 }
 const t0 = now()
@@ -87,6 +89,8 @@ export function recordFrame(dt: number, info: { calls: number; triangles: number
   ctx.lines = info.lines; ctx.points = info.points
 
   const t = now()
+  if (dt > 33) slow.push({ t: r2(t), dt: r2(dt), room: useStore.getState().roomId, dProg: info.programs - prevMem.p, dTex: info.textures - prevMem.t, dGeo: info.geometries - prevMem.g, calls: info.calls })
+  prevMem = { p: info.programs, t: info.textures, g: info.geometries }
   if (pendingToggle) {
     const p = pendingToggle
     if (p.firstFrameMs === null) {
@@ -149,6 +153,7 @@ export function snapshot() {
       avgTriangles: Math.round(avg(tris)), maxTrianglesWindow: Math.max(0, ...tris), maxTrianglesSinceReset: maxTris,
       geometries: ctx.geometries, textures: ctx.textures, programs: ctx.programs,
     },
+    slowFrames: slow.map((x) => ({ ...x })),
     longtasks: longtasks.map((l) => ({ ...l })),
     longtaskTotalMs: r2(longtasks.reduce((a, l) => a + l.duration, 0)),
     marks: marks.map((m) => ({ ...m })),
@@ -175,6 +180,7 @@ export function snapshot() {
 export function reset() {
   frames = []; calls = []; tris = []; maxCalls = 0; maxTris = 0
   longtasks = []
+  slow = []
 }
 
 function overlay() {
@@ -268,7 +274,7 @@ export function install() {
     setRail: (u: number) => { const st = useStore.getState(); st.setRailTarget(u); st.setRailU(u) },
     quality: () => useStore.getState().quality,
   }
-  w.__perf = { snapshot, reset, flags: perfFlags, drive }
+  w.__perf = { snapshot, reset, flags: perfFlags, drive, canvases: () => canvasLog.map((c) => [Math.round(c.t), c.px, c.who]) }
   if (document.body) overlay()
   else document.addEventListener('DOMContentLoaded', overlay)
 }
