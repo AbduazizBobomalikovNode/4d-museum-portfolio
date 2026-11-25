@@ -105,7 +105,7 @@ function uzLabelTexture(): THREE.CanvasTexture {
 
 const PLANET_TEXTURES = [
   asset('textures/planets/earth_atmos_2048.jpg'),
-  asset('textures/planets/earth_lights_2048.png'),
+  asset('textures/planets/earth_lights_2048.jpg'),
   asset('textures/planets/earth_clouds_1024.png'),
   asset('textures/planets/earth_specular_2048.jpg'),
 ]
