@@ -10,9 +10,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" />
     <title>4D Portfolio — Tesseract Gallery</title>
+    <!-- static first paint: same dark ground as the app, so nothing flashes white before the bundle runs -->
+    <style>
+      html { background: #0b0c10; }
+      #boot { position: fixed; inset: 0; display: grid; place-items: center; background: #0b0c10; color: #e8e6e0; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      #boot div { text-align: center; }
+      #boot b { display: block; font-size: 1.5rem; font-weight: 700; letter-spacing: 0.04em; }
+      #boot span { display: block; margin-top: 0.7rem; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: #f2b441; animation: bootpulse 1.4s ease-in-out infinite; }
+      @keyframes bootpulse { 50% { opacity: 0.35; } }
+      @media (prefers-reduced-motion: reduce) { #boot span { animation: none; } }
+    </style>
   </head>
-  <body>
-    <div id="root"></div>
+  <body style="margin:0;background:#0b0c10">
+    <!-- React replaces everything inside #root on the first render -->
+    <div id="root"><div id="boot" aria-hidden="true"><div><b>4D Portfolio</b><span>Tesseract Gallery</span></div></div></div>
     <!-- SEO / no-JS fallback: HTML-first content layer -->
     <noscript>
       <main style="font-family:system-ui;padding:2rem;max-width:60ch">
