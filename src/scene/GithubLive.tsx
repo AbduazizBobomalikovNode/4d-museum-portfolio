@@ -5,6 +5,7 @@ import { loadGithub, onGithub } from '@/lib/github'
 import { tr } from '@/lib/i18n'
 import { useLang } from '@/lib/useT'
 import { UNIT_BOX } from '@/lib/geo'
+import { ANISO, flatTexture, mkCanvas } from '@/lib/tier'
 
 const USER = 'AbduazizBobomalikovNode'
 
@@ -16,10 +17,7 @@ const USER = 'AbduazizBobomalikovNode'
  */
 export function GithubLive({ position, rotationY = 0 }: { position: [number, number, number]; rotationY?: number }) {
   const { tex, ctx } = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = 2048
-    canvas.height = 1024
-    const ctx = canvas.getContext('2d')!
+    const { canvas, ctx } = mkCanvas(2048, 1024)
     ctx.fillStyle = '#0d1117'
     ctx.fillRect(0, 0, 2048, 1024)
     ctx.fillStyle = '#8b949e'
@@ -27,7 +25,8 @@ export function GithubLive({ position, rotationY = 0 }: { position: [number, num
     ctx.fillText('GitHub yuklanmoqda…', 760, 512)
     const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace
-    tex.anisotropy = 8
+    tex.anisotropy = ANISO
+    flatTexture(tex, THREE.LinearFilter)
     return { tex, ctx }
   }, [])
   const painted = useRef(false)

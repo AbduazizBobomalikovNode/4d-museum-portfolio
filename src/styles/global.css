@@ -186,3 +186,8 @@ select.chip { padding-right: 10px; }
 .ghmd-body table { border-collapse: collapse; }
 .ghmd-body td, .ghmd-body th { border: 1px solid #30363d; padding: 4px 8px; }
 .ghmd-body code { background: #161b22; padding: 1px 5px; border-radius: 4px; font-family: var(--font-mono); font-size: 12.5px; }
+
+/* low tier (set once at start by lib/tier.ts): backdrop blur over an animating canvas is re-run every frame
+   on mobile GPUs, so panels get a more opaque flat background instead */
+html.tier-low { --glass: rgba(16, 18, 24, 0.88); }
+html.tier-low * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }

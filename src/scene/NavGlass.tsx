@@ -8,6 +8,7 @@ import { useLang } from '@/lib/useT'
 import { useStore } from '@/state/store'
 import { onCounts, readCounts, trackRoom, trackVisit, type Counts } from '@/lib/counter'
 import { RoomPreview } from './RoomPreview'
+import { ANISO, mkCanvas } from '@/lib/tier'
 
 const W = 2048
 const H = 1024
@@ -37,13 +38,10 @@ const BH = 128
  */
 function VisitBanner({ total, lang, width, y }: { total: number | null; lang: string; width: number; y: number }) {
   const { tex, ctx } = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = BW
-    canvas.height = BH
-    const ctx = canvas.getContext('2d')!
+    const { canvas, ctx } = mkCanvas(BW, BH)
     const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace
-    tex.anisotropy = 8
+    tex.anisotropy = ANISO
     return { tex, ctx }
   }, [])
 
@@ -90,10 +88,7 @@ function VisitBanner({ total, lang, width, y }: { total: number | null; lang: st
  * change instead: no canvas work, no upload.
  */
 const glowTexture = (() => {
-  const c = document.createElement('canvas')
-  c.width = 256
-  c.height = 256
-  const ctx = c.getContext('2d')!
+  const { canvas: c, ctx } = mkCanvas(256, 256)
   ctx.shadowColor = '#ffffff'
   ctx.shadowBlur = 30
   ctx.fillStyle = '#ffffff'
@@ -168,13 +163,10 @@ export function NavGlass({ position = [0, 0, 0], rotationY = 0, width = 3.8, hei
   const glowT = useRef(0)
 
   const { tex, ctx } = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = W
-    canvas.height = H
-    const ctx = canvas.getContext('2d')!
+    const { canvas, ctx } = mkCanvas(W, H)
     const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace
-    tex.anisotropy = 8
+    tex.anisotropy = ANISO
     return { tex, ctx }
   }, [])
 

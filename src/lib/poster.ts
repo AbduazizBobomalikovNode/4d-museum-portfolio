@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { ANISO, mkCanvas } from '@/lib/tier'
 
 /** GitHub language colors + brand colors used across posters and wall badges. */
 export const LANG_COLORS: Record<string, string> = {
@@ -42,15 +43,12 @@ function hookFonts() {
 function makeTexture(key: string, w: number, h: number, render: (ctx: CanvasRenderingContext2D) => void): THREE.CanvasTexture {
   const hit = cache.get(key)
   if (hit) return hit.tex
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')!
+  const { canvas, ctx } = mkCanvas(w, h)
   const draw = () => { ctx.clearRect(0, 0, w, h); render(ctx) }
   draw()
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
+  tex.anisotropy = ANISO
   cache.set(key, { tex, draw })
   hookFonts()
   return tex

@@ -4,6 +4,7 @@ import { useThree } from '@react-three/fiber'
 import type { ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 import { UNIT_BOX, UNIT_PLANE, asset } from '@/lib/geo'
+import { ANISO, ANISO_MAX, mkCanvas } from '@/lib/tier'
 
 /**
  * The CV, framed on the wall of the Gift Shop, with a download button under it.
@@ -28,10 +29,7 @@ const BTN_W = 1.6
 const BTN_H = 0.32
 
 function buttonTexture(): THREE.CanvasTexture {
-  const c = document.createElement('canvas')
-  c.width = 512
-  c.height = 128
-  const ctx = c.getContext('2d')!
+  const { canvas: c, ctx } = mkCanvas(512, 128)
   const g = ctx.createLinearGradient(0, 0, 512, 128)
   g.addColorStop(0, '#F2B441')
   g.addColorStop(1, '#E08D2F')
@@ -43,15 +41,12 @@ function buttonTexture(): THREE.CanvasTexture {
   ctx.fillText('CV yuklab olish ↓', 256, 82)
   const t = new THREE.CanvasTexture(c)
   t.colorSpace = THREE.SRGBColorSpace
-  t.anisotropy = 8
+  t.anisotropy = ANISO
   return t
 }
 
 function labelTexture(): THREE.CanvasTexture {
-  const c = document.createElement('canvas')
-  c.width = 512
-  c.height = 128
-  const ctx = c.getContext('2d')!
+  const { canvas: c, ctx } = mkCanvas(512, 128)
   ctx.fillStyle = '#E8E6E0'
   ctx.font = '700 42px "Sora", system-ui, sans-serif'
   ctx.textAlign = 'center'
@@ -61,7 +56,7 @@ function labelTexture(): THREE.CanvasTexture {
   ctx.fillText('Bobomalikov Abduaziz · PDF', 256, 92)
   const t = new THREE.CanvasTexture(c)
   t.colorSpace = THREE.SRGBColorSpace
-  t.anisotropy = 8
+  t.anisotropy = ANISO
   return t
 }
 
@@ -81,7 +76,7 @@ export function CvWall({
     page.generateMipmaps = true
     page.minFilter = THREE.LinearMipmapLinearFilter
     page.magFilter = THREE.LinearFilter
-    page.anisotropy = gl.capabilities.getMaxAnisotropy()
+    page.anisotropy = Math.min(gl.capabilities.getMaxAnisotropy(), ANISO_MAX)
     page.needsUpdate = true
   }, [page, gl])
 

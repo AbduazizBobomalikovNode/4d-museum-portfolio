@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import type { Book } from './books'
+import { ANISO, mkCanvas } from '@/lib/tier'
 
 /**
  * The gift shelf's small canvas-texture bits: the spin button label, the top-rail title
@@ -62,10 +63,7 @@ export function buttonTexture(): THREE.CanvasTexture {
   if (btnTex) return btnTex
   const W = 1024
   const H = 256
-  const canvas = document.createElement('canvas')
-  canvas.width = W
-  canvas.height = H
-  const ctx = canvas.getContext('2d')!
+  const { canvas, ctx } = mkCanvas(W, H)
   const draw = () => {
     ctx.clearRect(0, 0, W, H)
     const g = ctx.createLinearGradient(0, 0, W, H)
@@ -85,7 +83,7 @@ export function buttonTexture(): THREE.CanvasTexture {
   draw()
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
+  tex.anisotropy = ANISO
   onFontsReady(draw, tex)
   btnTex = tex
   return tex
@@ -100,10 +98,7 @@ export function titleTexture(): THREE.CanvasTexture {
   // tall as the 0.55m rail it sits on
   const W = 2048
   const H = 256
-  const canvas = document.createElement('canvas')
-  canvas.width = W
-  canvas.height = H
-  const ctx = canvas.getContext('2d')!
+  const { canvas, ctx } = mkCanvas(W, H)
   const draw = () => {
     ctx.clearRect(0, 0, W, H)
     ctx.textAlign = 'center'
@@ -118,7 +113,7 @@ export function titleTexture(): THREE.CanvasTexture {
   draw()
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
+  tex.anisotropy = ANISO
   onFontsReady(draw, tex)
   titleTex = tex
   return tex
@@ -134,10 +129,7 @@ export function cardTexture(book: Book): THREE.CanvasTexture {
   const hit = cardCache.get(book.id)
   if (hit) return hit
 
-  const canvas = document.createElement('canvas')
-  canvas.width = CARD_W
-  canvas.height = CARD_H
-  const ctx = canvas.getContext('2d')!
+  const { canvas, ctx } = mkCanvas(CARD_W, CARD_H)
 
   ctx.fillStyle = '#0d1016'
   ctx.fillRect(0, 0, CARD_W, CARD_H)
@@ -208,7 +200,7 @@ export function cardTexture(book: Book): THREE.CanvasTexture {
 
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
+  tex.anisotropy = ANISO
   cardCache.set(book.id, tex)
   return tex
 }

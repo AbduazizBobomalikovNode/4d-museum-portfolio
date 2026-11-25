@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import { BOOKS, BOOK_CELLS, SHELF_COLS, SHELF_ROWS, coverUrl, type Book } from '@/lib/books'
 import { CARD_BTN, buttonTexture, cardTexture, titleTexture } from '@/lib/bookart'
 import { UNIT_BOX, UNIT_PLANE } from '@/lib/geo'
+import { ANISO } from '@/lib/tier'
 
 /**
  * The gift shelf in the Gift Shop: a full-wall bookcase, 8 columns × 8 rows of
@@ -167,7 +168,7 @@ BOOKS.forEach((b) => useTexture.preload(coverUrl(b)))
 function BookFace({ book, cx, bottom }: { book: Book; cx: number; bottom: number }) {
   const tex = useTexture(coverUrl(book))
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
+  tex.anisotropy = ANISO
   const img = tex.image as { width?: number; height?: number } | undefined
   const aspect = img?.width && img?.height ? img.width / img.height : 0.68
   const maxW = COVER_W - 0.06
@@ -204,7 +205,7 @@ function BookFaces() {
 function CoverFaceMaterial({ book }: { book: Book }) {
   const tex = useTexture(coverUrl(book))
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
+  tex.anisotropy = ANISO
   return <meshStandardMaterial attach="material-4" map={tex} roughness={0.62} emissive="#ffffff" emissiveMap={tex} emissiveIntensity={0.34} />
 }
 

@@ -15,6 +15,12 @@ export const FLAG_NAMES = [
   'previewCull', // skip the nav-board preview pass while the board is off screen
   'monitorAfterEnter', // PerformanceMonitor may only demote quality once the visitor is inside
   'noPreserveBuffer', // renderer without preserveDrawingBuffer; screenshots render a frame first
+  'reflectorDispose', // dispose the reflector's render targets when it unmounts
+  'prefetchRapier', // the idle prefetch also warms rapier's own tiny chunk
+  'cullAll', // corridors, decor, wall screens etc. follow the same near-room visibility as rooms
+  'tierTuning', // phones: smaller canvases/images, fewer lights, pixel budget, flat HUD, stricter mobile detection
+  'lazyAssets', // only the gate's view is prepared before the gate; the rest loads/paints in idle slices
+  'prewarm', // warm-up compiles the composer's variants; upcoming rooms' textures are uploaded in idle slices
 ] as const
 
 export type FlagName = (typeof FLAG_NAMES)[number]

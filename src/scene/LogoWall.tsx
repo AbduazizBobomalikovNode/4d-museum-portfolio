@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import * as THREE from 'three'
 import { COLS, ROWS, buildLogoWall } from '@/lib/techlogos'
 import { UNIT_BOX, UNIT_PLANE } from '@/lib/geo'
+import { ANISO, mkCanvas } from '@/lib/tier'
 
 /**
  * The technology wall in the Skills Lab: 62 official logos on a 16-column grid.
@@ -39,17 +40,14 @@ export function LogoWall({
   }, [])
 
   const titleTex = useMemo(() => {
-    const c = document.createElement('canvas')
-    c.width = 1024
-    c.height = 128
-    const ctx = c.getContext('2d')!
+    const { canvas: c, ctx } = mkCanvas(1024, 128)
     ctx.fillStyle = '#E8E6E0'
     ctx.font = '600 62px "Sora", system-ui, sans-serif'
     ctx.textAlign = 'center'
     ctx.fillText(title, 512, 88)
     const t = new THREE.CanvasTexture(c)
     t.colorSpace = THREE.SRGBColorSpace
-    t.anisotropy = 8
+    t.anisotropy = ANISO
     return t
   }, [title])
 

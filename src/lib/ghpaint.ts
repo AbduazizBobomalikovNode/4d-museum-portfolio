@@ -190,7 +190,7 @@ export function paintReadme(ctx: CanvasRenderingContext2D, blocks: Block[], imgs
   const maxW = W - M * 2
   let y = 90
   ctx.fillStyle = '#0d1117'
-  ctx.fillRect(0, 0, W, ctx.canvas.height)
+  ctx.fillRect(0, 0, W, 2048) // the tall canvas is 2048 LOGICAL px high (its backing store may be smaller on the low tier)
   const drawInlines = (inlines: Inline[], startX: number, font: number, lh: number, center = false) => {
     // measure pass for centering (single-line approximation for headings)
     let x = startX

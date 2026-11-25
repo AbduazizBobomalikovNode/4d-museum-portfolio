@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { exhibits } from '@/data/exhibits'
 import { roomById } from '@/data/rooms'
 import { useStore } from '@/state/store'
+import { SPOT_POOL } from '@/lib/tier'
 
-const POOL = 6
+/** 6 on desktop; fewer on phones (decided once from the initial tier — the count must never change at runtime). */
+const POOL = SPOT_POOL
 const DEG = Math.PI / 180
 
 interface Slot { pos: THREE.Vector3; target: THREE.Vector3; accent: THREE.Color }
@@ -50,7 +52,28 @@ export function SpotPool() {
     lights.current.forEach((l, i) => { if (l) l.target = targets[i] })
   }, [targets])
 
-  const assigned = useMemo(() => exhibits.filter((e) => e.roomId === roomId).slice(0, POOL), [roomId])
+  const inRoom = useMemo(() => exhibits.filter((e) => e.roomId === roomId), [roomId])
+  // pool >= exhibits (desktop): the same fixed assignment as always. Smaller pool (phones): the lamps follow
+  // the exhibits nearest the camera, re-picked at most 3x/s and only when the set actually changes; an exhibit
+  // that stays in the set keeps its lamp, so nothing jumps.
+  const base = useMemo(() => inRoom.slice(0, POOL), [inRoom])
+  const [picked, setPicked] = useState<{ room: string; list: typeof base } | null>(null)
+  const assigned = picked && picked.room === roomId ? picked.list : base
+  const lastPick = useRef(0)
+  useFrame((state) => {
+    if (inRoom.length <= POOL || state.clock.elapsedTime - lastPick.current < 0.33) return
+    lastPick.current = state.clock.elapsedTime
+    const cp = state.camera.position
+    const want = [...inRoom]
+      .sort((a, b) => SLOTS[a.id].target.distanceToSquared(cp) - SLOTS[b.id].target.distanceToSquared(cp))
+      .slice(0, POOL)
+    const cur = picked && picked.room === roomId ? picked.list : base
+    if (cur.length === want.length && cur.every((e) => want.includes(e))) return
+    const next = cur.map((e) => (want.includes(e) ? e : undefined))
+    const fresh = want.filter((e) => !cur.includes(e))
+    for (let i = 0; i < POOL; i++) if (!next[i] && fresh.length) next[i] = fresh.shift()
+    setPicked({ room: roomId, list: next.filter(Boolean) as typeof base })
+  })
 
   useEffect(() => {
     for (let i = 0; i < POOL; i++) {

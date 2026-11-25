@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { Canvas, useThree } from '@react-three/fiber'
 import { KeyboardControls, PerformanceMonitor, Preload } from '@react-three/drei'
 import { useStore } from '@/state/store'
-import { detectQuality, qualityPreset } from '@/lib/quality'
+import { canvasDpr } from '@/lib/tier'
 import { World } from './World'
 import { Lighting } from './Lighting'
 import { RailCamera } from './player/RailCamera'
@@ -194,7 +194,7 @@ export function Experience() {
   const quality = useStore((s) => s.quality)
   const setQuality = useStore((s) => s.setQuality)
   // fixed for the session: changing dpr resizes the canvas and rebuilds every render target
-  const dpr = useMemo(() => qualityPreset[detectQuality()].dpr, [])
+  const dpr = useMemo(() => canvasDpr(), [])
   // monitorAfterEnter: when the visitor entered (0 = not yet)
   const liveAt = useRef(0)
   useEffect(() => useStore.subscribe((s) => s.phase, (p) => { if (p === 'live') liveAt.current = performance.now() }), [])

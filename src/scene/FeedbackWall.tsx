@@ -6,6 +6,7 @@ import { useStore } from '@/state/store'
 import { useT } from '@/lib/useT'
 import { useLang } from '@/lib/useT'
 import { UNIT_BOX } from '@/lib/geo'
+import { ANISO, flatTexture, mkCanvas } from '@/lib/tier'
 
 const W = 2048
 const H = 1024
@@ -68,13 +69,11 @@ export function FeedbackWall({ position, rotationY = 0 }: { position: [number, n
   const lang = useLang()
 
   const { tex, ctx } = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = W
-    canvas.height = H
-    const ctx = canvas.getContext('2d')!
+    const { canvas, ctx } = mkCanvas(W, H)
     const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace
-    tex.anisotropy = 8
+    tex.anisotropy = ANISO
+    flatTexture(tex, THREE.LinearFilter)
     return { tex, ctx }
   }, [])
 

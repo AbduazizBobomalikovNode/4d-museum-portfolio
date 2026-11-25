@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { loadImg } from './ghpaint'
+import { ANISO, flatTexture, mkCanvas } from '@/lib/tier'
 
 /**
  * Wall of official technology logos, painted into one CanvasTexture.
@@ -128,13 +129,11 @@ export interface LogoWall {
 export function buildLogoWall(): LogoWall {
   const w = COLS * CELL
   const h = ROWS * CELL
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')!
+  const { canvas, ctx } = mkCanvas(w, h)
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
+  tex.anisotropy = ANISO
+  flatTexture(tex, THREE.LinearFilter)
 
   const cellRect = (i: number) => {
     const col = i % COLS
@@ -213,13 +212,10 @@ export function buildLogoWall(): LogoWall {
  */
 export function logoBadgeTexture(logo: Logo, onReady?: () => void): THREE.CanvasTexture {
   const S = 256
-  const canvas = document.createElement('canvas')
-  canvas.width = S
-  canvas.height = S
-  const ctx = canvas.getContext('2d')!
+  const { canvas, ctx } = mkCanvas(S, S)
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
+  tex.anisotropy = ANISO
 
   const ground = () => {
     ctx.clearRect(0, 0, S, S)

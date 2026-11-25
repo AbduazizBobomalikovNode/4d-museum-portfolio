@@ -7,6 +7,7 @@ const FONT_M = '"IBM Plex Mono", ui-monospace, monospace'
 
 import { CITY, MONTHS, WEEKDAYS, type Lang } from '@/lib/i18n'
 import { useLang } from '@/lib/useT'
+import { ANISO, flatTexture, mkCanvas } from '@/lib/tier'
 
 /** Built once: constructing an Intl formatter is far costlier than using one. */
 const TASHKENT = new Intl.DateTimeFormat('en-GB', {
@@ -38,15 +39,13 @@ export function WallClock({ position, rotationY = 0 }: { position: [number, numb
   const lastSec = useRef(-1)
   const lastLang = useRef('')
   const lang = useLang()
-  const { tex, ctx, canvas } = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = 1024
-    canvas.height = 512
-    const ctx = canvas.getContext('2d')!
+  const { tex, ctx } = useMemo(() => {
+    const { canvas, ctx } = mkCanvas(1024, 512)
     const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace
-    tex.anisotropy = 8
-    return { tex, ctx, canvas }
+    tex.anisotropy = ANISO
+    flatTexture(tex, THREE.LinearFilter)
+    return { tex, ctx }
   }, [])
 
   useFrame(() => {
@@ -57,8 +56,8 @@ export function WallClock({ position, rotationY = 0 }: { position: [number, numb
     lastSec.current = sec
     lastLang.current = lang
     const t = tashkentNow(lang, sec * 1000)
-    const w = canvas.width
-    const h = canvas.height
+    const w = 1024 // logical size (the backing store may be smaller on the low tier)
+    const h = 512
     ctx.clearRect(0, 0, w, h)
     // glass panel ground
     ctx.fillStyle = 'rgba(10, 14, 20, 0.42)'

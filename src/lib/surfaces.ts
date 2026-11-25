@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { ANISO, mkCanvas } from '@/lib/tier'
 
 /**
  * Procedural surface textures (canvas) — no external assets.
@@ -11,14 +12,12 @@ const cache = new Map<string, THREE.CanvasTexture>()
 function make(key: string, size: number, render: (ctx: CanvasRenderingContext2D, s: number) => void): THREE.CanvasTexture {
   const hit = cache.get(key)
   if (hit) return hit
-  const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = size
-  const ctx = canvas.getContext('2d')!
+  const { canvas, ctx } = mkCanvas(size, size)
   render(ctx, size)
   const tex = new THREE.CanvasTexture(canvas)
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
+  tex.anisotropy = ANISO
   cache.set(key, tex)
   return tex
 }

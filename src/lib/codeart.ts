@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { ANISO, mkCanvas } from '@/lib/tier'
 
 /**
  * Famous code as museum pieces.
@@ -126,10 +127,7 @@ export function codePlateTexture(p: CodePlate): THREE.CanvasTexture {
   const hit = cache.get(p.id)
   if (hit) return hit
 
-  const canvas = document.createElement('canvas')
-  canvas.width = W
-  canvas.height = H
-  const ctx = canvas.getContext('2d')!
+  const { canvas, ctx } = mkCanvas(W, H)
 
   // plate ground and a thin inner frame, like a mounted print
   ctx.fillStyle = C.bg
@@ -186,7 +184,7 @@ export function codePlateTexture(p: CodePlate): THREE.CanvasTexture {
 
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
+  tex.anisotropy = ANISO
   cache.set(p.id, tex)
   return tex
 }

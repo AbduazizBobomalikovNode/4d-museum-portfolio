@@ -3,20 +3,22 @@ import * as THREE from 'three'
 import { loadImg, paintReadme, parseReadme } from '@/lib/ghpaint'
 import { loadGithub, onGithub, type GithubSnapshot } from '@/lib/github'
 import { UNIT_BOX } from '@/lib/geo'
+import { ANISO, flatTexture, mkCanvas } from '@/lib/tier'
 
 const USER = 'AbduazizBobomalikovNode'
 const PAGE_H = 1024 // content pixels shown per screen
 
 let tall: HTMLCanvasElement | null = null
+let tallScale = 1
 const listeners = new Set<() => void>()
 
 /** Fetch + paint the README once into a shared tall canvas; notify page textures. */
 async function ensurePainted() {
   if (tall) return
-  tall = document.createElement('canvas')
-  tall.width = 2048
-  tall.height = 2048
-  const ctx = tall.getContext('2d')!
+  const made = mkCanvas(2048, 2048)
+  tall = made.canvas
+  tallScale = made.s
+  const ctx = made.ctx
   const render = async (snap: GithubSnapshot) => {
     if (!snap.readme) return
     const { blocks, imgUrls } = parseReadme(snap.readme)
@@ -36,10 +38,7 @@ async function ensurePainted() {
  */
 export function GithubReadme({ position, rotationY = 0, page = 0 }: { position: [number, number, number]; rotationY?: number; page?: number }) {
   const { tex, ctx } = useMemo(() => {
-    const canvas = document.createElement('canvas')
-    canvas.width = 2048
-    canvas.height = PAGE_H
-    const ctx = canvas.getContext('2d')!
+    const { canvas, ctx } = mkCanvas(2048, PAGE_H)
     ctx.fillStyle = '#0d1117'
     ctx.fillRect(0, 0, 2048, PAGE_H)
     ctx.fillStyle = '#8b949e'
@@ -47,7 +46,8 @@ export function GithubReadme({ position, rotationY = 0, page = 0 }: { position: 
     ctx.fillText('README yuklanmoqda…', 720, 500)
     const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace
-    tex.anisotropy = 8
+    tex.anisotropy = ANISO
+    flatTexture(tex, THREE.LinearFilter)
     return { tex, ctx }
   }, [])
   const done = useRef(false)
@@ -57,7 +57,7 @@ export function GithubReadme({ position, rotationY = 0, page = 0 }: { position: 
       if (!tall) return
       ctx.fillStyle = '#0d1117'
       ctx.fillRect(0, 0, 2048, PAGE_H)
-      ctx.drawImage(tall, 0, page * PAGE_H, 2048, PAGE_H, 0, 0, 2048, PAGE_H)
+      ctx.drawImage(tall, 0, page * PAGE_H * tallScale, 2048 * tallScale, PAGE_H * tallScale, 0, 0, 2048, PAGE_H)
       // page number
       ctx.fillStyle = '#8b949e'
       ctx.font = '30px "IBM Plex Mono", monospace'
