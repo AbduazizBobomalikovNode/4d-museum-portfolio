@@ -11,12 +11,15 @@ import { IntroCamera } from './player/IntroCamera'
 import { keyboardMap } from '@/lib/keys'
 import { TouchLook } from './player/TouchLook'
 import { EscapeLadder } from './EscapeLadder'
+import { perfMode } from '@/lib/perfFlags'
 
 const DEBUG = import.meta.env.VITE_DEBUG === '1' || import.meta.env.DEV
 
 // Heavy chunks, loaded on demand: rapier+ecctrl only for free-walk, postprocessing only when quality allows it.
 const PhysicsWorld = lazy(() => import('./physics/PhysicsWorld'))
 const Effects = lazy(() => import('./Effects'))
+// ?perf=1 only — never part of a normal visit's work
+const PerfProbe = perfMode ? lazy(() => import('@/perf/PerfProbe')) : null
 
 /**
  * Compiles every material once while the whole museum is still visible, then drops the
@@ -141,6 +144,7 @@ export function Experience() {
         </Suspense>
         <Preload all />
         <ReadyProbe />
+        {PerfProbe && <PerfProbe />}
       </Suspense>
     </Canvas>
   )

@@ -24,6 +24,7 @@ import { FeedbackWall } from './FeedbackWall'
 import { LanguageKiosk } from './LanguageKiosk'
 import { CornerGlass } from './CornerGlass'
 import { NavGlass } from './NavGlass'
+import { perfCount } from '@/lib/perfBus'
 
 /**
  * Door openings per room from the corridor graph.
@@ -87,6 +88,7 @@ function WallFxDriver() {
 
 export function World() {
   const openings = useOpenings()
+  useEffect(() => { perfCount('World') }, [])
 
   return (
     <group name="world">

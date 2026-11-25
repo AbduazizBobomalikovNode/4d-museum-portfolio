@@ -1,3 +1,5 @@
+import { perfMode } from './perfFlags'
+
 /**
  * Visit counters for the quick-travel board.
  *
@@ -48,6 +50,8 @@ export function onCounts(fn: (c: Counts) => void): () => void {
 }
 
 async function call(path: string, key: string): Promise<number | null> {
+  // ?perf=1 measurement sessions must not inflate the public numbers: read, never hit
+  if (perfMode && path === 'hit') path = 'get'
   try {
     const ctl = new AbortController()
     const timer = setTimeout(() => ctl.abort(), TIMEOUT)
@@ -123,6 +127,7 @@ export function readLikes(): void {
  * already liked, so the button can just sit there looking pressed.
  */
 export function like(): boolean {
+  if (perfMode) return false
   if (seen(LIKE_KEY)) return false
   void call('hit', LIKE_KEY)
   return true
