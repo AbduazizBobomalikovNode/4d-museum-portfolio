@@ -9,6 +9,7 @@ import { useStore } from '@/state/store'
 import { onCounts, readCounts, trackRoom, trackVisit, type Counts } from '@/lib/counter'
 import { RoomPreview } from './RoomPreview'
 import { ANISO, mkCanvas } from '@/lib/tier'
+import { memoOnce } from '@/lib/assets'
 
 const W = 2048
 const H = 1024
@@ -162,13 +163,13 @@ export function NavGlass({ position = [0, 0, 0], rotationY = 0, width = 3.8, hei
 
   const glowT = useRef(0)
 
-  const { tex, ctx } = useMemo(() => {
+  const { tex, ctx } = useMemo(() => memoOnce('nav-board', () => {
     const { canvas, ctx } = mkCanvas(W, H)
     const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace
     tex.anisotropy = ANISO
     return { tex, ctx }
-  }, [])
+  }), [])
 
   const paint = useCallback(() => {
     ctx.clearRect(0, 0, W, H)

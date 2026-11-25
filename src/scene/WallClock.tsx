@@ -8,6 +8,7 @@ const FONT_M = '"IBM Plex Mono", ui-monospace, monospace'
 import { CITY, MONTHS, WEEKDAYS, type Lang } from '@/lib/i18n'
 import { useLang } from '@/lib/useT'
 import { ANISO, flatTexture, mkCanvas } from '@/lib/tier'
+import { memoOnce } from '@/lib/assets'
 
 /** Built once: constructing an Intl formatter is far costlier than using one. */
 const TASHKENT = new Intl.DateTimeFormat('en-GB', {
@@ -39,14 +40,14 @@ export function WallClock({ position, rotationY = 0 }: { position: [number, numb
   const lastSec = useRef(-1)
   const lastLang = useRef('')
   const lang = useLang()
-  const { tex, ctx } = useMemo(() => {
+  const { tex, ctx } = useMemo(() => memoOnce('wall-clock', () => {
     const { canvas, ctx } = mkCanvas(1024, 512)
     const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace
     tex.anisotropy = ANISO
     flatTexture(tex, THREE.LinearFilter)
     return { tex, ctx }
-  }, [])
+  }), [])
 
   useFrame(() => {
     // the face only changes once a second (or with the language): compare the whole second

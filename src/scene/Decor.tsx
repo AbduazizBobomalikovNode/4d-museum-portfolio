@@ -1,6 +1,5 @@
 import { Suspense, useMemo, useState } from 'react'
 import * as THREE from 'three'
-import { useTexture } from '@react-three/drei'
 import { STACK_BADGES, logoBadgeTexture } from '@/lib/techlogos'
 import { circuitTexture, codeTexture, contribTexture, numberTexture, quoteTexture, signTexture, wordmarkTexture, yearsTexture } from '@/lib/poster'
 import { corridors, roomById, rooms, DOOR_HEIGHT } from '@/data/rooms'
@@ -9,6 +8,7 @@ import { useLang } from '@/lib/useT'
 import { pick } from '@/lib/i18n'
 import { UNIT_BOX, asset } from '@/lib/geo'
 import { ANISO } from '@/lib/tier'
+import { preloadImage, useImageTexture } from '@/lib/assets'
 import { Cull } from './Cull'
 
 
@@ -39,7 +39,7 @@ function Mural({ tex, position, rotationY, w, h, intensity = 0.4 }: { tex: THREE
 }
 
 function CodePanel({ position, rotationY, w, h, seed }: { position: [number, number, number]; rotationY: number; w: number; h: number; seed: number }) {
-  const tex = useMemo(() => codeTexture(seed), [seed])
+  const tex = useMemo(() => codeTexture(seed, 'atrium'), [seed])
   return (
     <mesh position={position} rotation={[0, rotationY, 0]}>
       <planeGeometry args={[w, h]} />
@@ -51,7 +51,7 @@ function CodePanel({ position, rotationY, w, h, seed }: { position: [number, num
 /** Wayfinding sign INSIDE `room`, above its door toward `other`. */
 function DoorSign({ room, other }: { room: Room; other: Room }) {
   const lang = useLang()
-  const tex = useMemo(() => signTexture(pick(other.title, lang), pick(other.eyebrow, lang), lang), [other, lang])
+  const tex = useMemo(() => signTexture(pick(other.title, lang), pick(other.eyebrow, lang), lang, room.id), [other, lang, room.id])
   const y0 = Math.max(room.floorY, other.floorY)
   const dx = other.center[0] - room.center[0]
   const dz = other.center[1] - room.center[1]
@@ -76,14 +76,14 @@ function DoorSign({ room, other }: { room: Room; other: Room }) {
   )
 }
 
-useTexture.preload(asset('textures/portrait.jpg'))
+preloadImage(asset('textures/portrait.jpg'))
 
 /**
  * Portrait photo material. Loaded through the R3F loader cache so `<Preload all />` and the
  * warm-up compile see it — swapping the material in later cost a mid-walk shader rebuild.
  */
 function PortraitFace() {
-  const tex = useTexture(asset('textures/portrait.jpg'))
+  const tex = useImageTexture(asset('textures/portrait.jpg'), 'about')
   tex.colorSpace = THREE.SRGBColorSpace
   tex.anisotropy = ANISO
   return <meshStandardMaterial map={tex} emissive="#ffffff" emissiveMap={tex} emissiveIntensity={0.32} roughness={0.85} />
@@ -156,7 +156,7 @@ export function Decor() {
       NUMBERS.map((n, i) => {
         const room = roomById[n.id]
         const label = pick(room.eyebrow, lang).split('·')[0].trim()
-        return { key: String(n.id), tex: numberTexture(String(i + 1).padStart(2, '0'), label, room.accent, lang), ...sideXform(room, n.side, n.along, room.floorY + 3.9) }
+        return { key: String(n.id), tex: numberTexture(String(i + 1).padStart(2, '0'), label, room.accent, lang, n.id), ...sideXform(room, n.side, n.along, room.floorY + 3.9) }
       }),
     [lang],
   )
@@ -203,25 +203,25 @@ export function Decor() {
       ))}
 
       {/* entrance: wordmark banner (east wall) */}
-      <Cull id="entrance"><Mural tex={wordmarkTexture()} {...sideXform(entrance, 'e', 0, entrance.floorY + 2.5)} w={5.4} h={1.35} intensity={0.45} /></Cull>
+      <Cull id="entrance"><Mural tex={wordmarkTexture('entrance')} {...sideXform(entrance, 'e', 0, entrance.floorY + 2.5)} w={5.4} h={1.35} intensity={0.45} /></Cull>
 
       {/* contact: GitHub contribution graph (south wall) */}
-      <Cull id="contact"><Mural tex={contribTexture()} {...sideXform(contact, 's', 0, contact.floorY + 2.2)} w={4.4} h={2.2} intensity={0.5} /></Cull>
+      <Cull id="contact"><Mural tex={contribTexture(47, 'contact')} {...sideXform(contact, 's', 0, contact.floorY + 2.2)} w={4.4} h={2.2} intensity={0.5} /></Cull>
 
       {/* experiments: circuit boards flanking the south door */}
       <Cull id="experiments">
-        <Mural tex={circuitTexture(5)} {...sideXform(experiments, 's', -4.5, experiments.floorY + 2.5)} w={3} h={3} intensity={0.45} />
-        <Mural tex={circuitTexture(9)} {...sideXform(experiments, 's', 4.5, experiments.floorY + 2.5)} w={3} h={3} intensity={0.45} />
+        <Mural tex={circuitTexture(5, 'experiments')} {...sideXform(experiments, 's', -4.5, experiments.floorY + 2.5)} w={3} h={3} intensity={0.45} />
+        <Mural tex={circuitTexture(9, 'experiments')} {...sideXform(experiments, 's', 4.5, experiments.floorY + 2.5)} w={3} h={3} intensity={0.45} />
       </Cull>
 
       {/* timeline: year band above the frames on both long walls */}
       <Cull id="timeline">
-        <Mural tex={yearsTexture()} {...sideXform(timeline, 'n', 0, timeline.floorY + 3.6)} w={11} h={1.4} intensity={0.5} />
-        <Mural tex={yearsTexture()} {...sideXform(timeline, 's', 0, timeline.floorY + 3.6)} w={11} h={1.4} intensity={0.5} />
+        <Mural tex={yearsTexture('timeline')} {...sideXform(timeline, 'n', 0, timeline.floorY + 3.6)} w={11} h={1.4} intensity={0.5} />
+        <Mural tex={yearsTexture('timeline')} {...sideXform(timeline, 's', 0, timeline.floorY + 3.6)} w={11} h={1.4} intensity={0.5} />
       </Cull>
 
       {/* about: quote mural (south wall) */}
-      <Cull id="about"><Mural tex={quoteTexture()} {...sideXform(about, 'w', 4.6, about.floorY + 1.75)} w={4.2} h={2.1} intensity={0.4} /></Cull>
+      <Cull id="about"><Mural tex={quoteTexture('about')} {...sideXform(about, 'w', 4.6, about.floorY + 1.75)} w={4.2} h={2.1} intensity={0.4} /></Cull>
 
       {/* about: GitHub portrait — south wall, beside the quote */}
       <Portrait position={[about.center[0] - 4.0, about.floorY + 2.3, about.center[1] + about.size[1] / 2 - 0.18]} rotationY={Math.PI} />

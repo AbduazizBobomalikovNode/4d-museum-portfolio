@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useTexture } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import type { ThreeEvent } from '@react-three/fiber'
 import * as THREE from 'three'
 import { UNIT_BOX, UNIT_PLANE, asset } from '@/lib/geo'
 import { ANISO, ANISO_MAX, mkCanvas } from '@/lib/tier'
+import { preloadImage, useImageTexture } from '@/lib/assets'
 
 /**
  * The CV, framed on the wall of the Gift Shop, with a download button under it.
@@ -67,7 +67,7 @@ export function CvWall({
   position: [number, number, number]
   rotationY?: number
 }) {
-  const page = useTexture(PAGE)
+  const page = useImageTexture(PAGE, 'contact')
   const [hover, setHover] = useState(false)
   const { gl } = useThree()
 
@@ -165,4 +165,4 @@ export function CvWall({
   )
 }
 
-useTexture.preload(PAGE)
+preloadImage(PAGE)

@@ -5,6 +5,7 @@ import { Billboard, useTexture } from '@react-three/drei'
 import { asset } from '@/lib/geo'
 import { ANISO, mkCanvas } from '@/lib/tier'
 import { Cull } from './Cull'
+import { capTextureImage } from '@/lib/assets'
 
 const R = 1.6
 const DEG = Math.PI / 180
@@ -116,6 +117,8 @@ function Earth({ speed }: { speed: number }) {
   const beaconHead = useRef<THREE.Mesh>(null)
 
   const [day, lights, cloudsMap, specular] = useTexture(PLANET_TEXTURES)
+  // low tier: 2048x1024 maps are 8 MB each as RGBA (+ mips); cap the long side (no-op elsewhere)
+  ;[day, lights, cloudsMap, specular].forEach(capTextureImage)
   day.colorSpace = THREE.SRGBColorSpace
   lights.colorSpace = THREE.SRGBColorSpace
   day.anisotropy = lights.anisotropy = ANISO

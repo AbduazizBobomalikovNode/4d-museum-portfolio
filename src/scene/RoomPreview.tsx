@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { useFrame, useThree } from '@react-three/fiber'
 import { rooms } from '@/data/rooms'
 import { perfFlags } from '@/lib/perfFlags'
+import { onRoomAssets } from '@/lib/assets'
 import { boxMaybeInView } from '@/lib/viewCull'
 
 const RT_W = 384
@@ -49,6 +50,8 @@ export function RoomPreview({
     return rt
   }, [])
   useEffect(() => () => target.dispose(), [target])
+  // lazyAssets: this room's textures arrive after the first still was shot — shoot it again
+  useEffect(() => onRoomAssets((id) => { if (id === room.id) drawn.current = false }), [room.id])
 
   const cam = useMemo(() => new THREE.PerspectiveCamera(60, RT_W / RT_H, 0.1, 70), [])
   const tick = useRef(0)

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { loadImg } from './ghpaint'
+import { defer, deferUpload, memoOnce, registerTexture } from './assets'
 import { ANISO, flatTexture, mkCanvas } from '@/lib/tier'
 
 /**
@@ -134,6 +135,7 @@ export function buildLogoWall(): LogoWall {
   tex.colorSpace = THREE.SRGBColorSpace
   tex.anisotropy = ANISO
   flatTexture(tex, THREE.LinearFilter)
+  deferUpload(tex, canvas, 'skills')
 
   const cellRect = (i: number) => {
     const col = i % COLS
@@ -166,7 +168,8 @@ export function buildLogoWall(): LogoWall {
   tex.needsUpdate = true
 
   // fill in the real marks, a few at a time so the network is not hit with 60 at once
-  void (async () => {
+  // lazyAssets: the 62 remote marks are fetched in idle slices after the gate (skills room first when near)
+  defer('skills', async () => {
     const BATCH = 6
     for (let start = 0; start < LOGOS.length; start += BATCH) {
       const slice = LOGOS.slice(start, start + BATCH)
@@ -197,8 +200,9 @@ export function buildLogoWall(): LogoWall {
         ctx.textAlign = 'left'
       })
       tex.needsUpdate = true
+      registerTexture(tex)
     }
-  })()
+  })
 
   return { texture: tex, aspect: w / h }
 }
@@ -211,6 +215,10 @@ export function buildLogoWall(): LogoWall {
  * plate still reads while the logo is in flight — or if its host ever stops answering.
  */
 export function logoBadgeTexture(logo: Logo, onReady?: () => void): THREE.CanvasTexture {
+  return memoOnce('badge:' + logo.name, () => buildBadge(logo, onReady))
+}
+
+function buildBadge(logo: Logo, onReady?: () => void): THREE.CanvasTexture {
   const S = 256
   const { canvas, ctx } = mkCanvas(S, S)
   const tex = new THREE.CanvasTexture(canvas)
@@ -244,7 +252,7 @@ export function logoBadgeTexture(logo: Logo, onReady?: () => void): THREE.Canvas
   caption()
   tex.needsUpdate = true
 
-  void loadImg(logo.url).then((bmp) => {
+  defer('skills', () => loadImg(logo.url).then((bmp) => {
     if (!bmp) return // host refused — the name stays
     ground()
     const box = S - 96
@@ -255,7 +263,7 @@ export function logoBadgeTexture(logo: Logo, onReady?: () => void): THREE.Canvas
     caption()
     tex.needsUpdate = true
     onReady?.()
-  })
+  }))
 
   return tex
 }

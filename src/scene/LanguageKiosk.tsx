@@ -6,6 +6,7 @@ import { useStore } from '@/state/store'
 import { UNIT_BOX } from '@/lib/geo'
 import { ANISO, mkCanvas } from '@/lib/tier'
 import { Cull } from './Cull'
+import { memoOnce } from '@/lib/assets'
 
 const W = 1024
 const H = 1024
@@ -38,13 +39,13 @@ export function LanguageKiosk({ position, rotationY = 0 }: { position: [number, 
   const [hover, setHover] = useState<Lang | null>(null)
   const flash = useRef(0)
 
-  const { tex, ctx } = useMemo(() => {
+  const { tex, ctx } = useMemo(() => memoOnce('kiosk', () => {
     const { canvas, ctx } = mkCanvas(W, H)
     const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace
     tex.anisotropy = ANISO
     return { tex, ctx }
-  }, [])
+  }), [])
 
   const paint = useCallback(() => {
     ctx.clearRect(0, 0, W, H)

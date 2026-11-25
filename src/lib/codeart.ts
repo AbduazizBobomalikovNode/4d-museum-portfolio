@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { ANISO, mkCanvas } from '@/lib/tier'
+import { lazyPainted } from './assets'
 
 /**
  * Famous code as museum pieces.
@@ -127,64 +127,63 @@ export function codePlateTexture(p: CodePlate): THREE.CanvasTexture {
   const hit = cache.get(p.id)
   if (hit) return hit
 
-  const { canvas, ctx } = mkCanvas(W, H)
+  // painted after the web fonts are ready (lazyAssets), in the atrium's critical set
+  const tex = lazyPainted(W, H, (ctx) => {
 
-  // plate ground and a thin inner frame, like a mounted print
-  ctx.fillStyle = C.bg
-  ctx.fillRect(0, 0, W, H)
-  ctx.strokeStyle = C.frame
-  ctx.lineWidth = 3
-  ctx.strokeRect(14, 14, W - 28, H - 28)
+    // plate ground and a thin inner frame, like a mounted print
+    ctx.fillStyle = C.bg
+    ctx.fillRect(0, 0, W, H)
+    ctx.strokeStyle = C.frame
+    ctx.lineWidth = 3
+    ctx.strokeRect(14, 14, W - 28, H - 28)
 
-  // title
-  ctx.fillStyle = C.ttl
-  ctx.font = `700 38px ${FONT_D}`
-  ctx.fillText(p.title, 52, 84)
+    // title
+    ctx.fillStyle = C.ttl
+    ctx.font = `700 38px ${FONT_D}`
+    ctx.fillText(p.title, 52, 84)
 
-  // year, right-aligned on the title line
-  ctx.fillStyle = C.accent
-  ctx.font = `500 24px ${FONT_M}`
-  ctx.textAlign = 'right'
-  ctx.fillText(p.year, W - 52, 84)
-  ctx.textAlign = 'left'
+    // year, right-aligned on the title line
+    ctx.fillStyle = C.accent
+    ctx.font = `500 24px ${FONT_M}`
+    ctx.textAlign = 'right'
+    ctx.fillText(p.year, W - 52, 84)
+    ctx.textAlign = 'left'
 
-  // hairline under the title
-  ctx.strokeStyle = C.frame
-  ctx.lineWidth = 2
-  ctx.beginPath()
-  ctx.moveTo(52, 108)
-  ctx.lineTo(W - 52, 108)
-  ctx.stroke()
+    // hairline under the title
+    ctx.strokeStyle = C.frame
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(52, 108)
+    ctx.lineTo(W - 52, 108)
+    ctx.stroke()
 
-  // the snippet
-  let size = 30
-  ctx.font = `400 ${size}px ${FONT_M}`
-  const longest = p.code.reduce((a, [t]) => Math.max(a, ctx.measureText(t).width), 0)
-  while (size > 16 && longest * (size / 30) > W - 130) size -= 2
-  ctx.font = `400 ${size}px ${FONT_M}`
-  const lh = size * 1.55
-  const top = 172
-  p.code.forEach(([text, role], i) => {
-    ctx.fillStyle = C[role]
-    ctx.fillText(text, 56, top + i * lh)
-  })
+    // the snippet
+    let size = 30
+    ctx.font = `400 ${size}px ${FONT_M}`
+    const longest = p.code.reduce((a, [t]) => Math.max(a, ctx.measureText(t).width), 0)
+    while (size > 16 && longest * (size / 30) > W - 130) size -= 2
+    ctx.font = `400 ${size}px ${FONT_M}`
+    const lh = size * 1.55
+    const top = 172
+    p.code.forEach(([text, role], i) => {
+      ctx.fillStyle = C[role]
+      ctx.fillText(text, 56, top + i * lh)
+    })
 
-  // caption at the foot
-  ctx.fillStyle = C.cap
-  ctx.font = `400 21px ${FONT_D}`
-  const words = p.caption.split(' ')
-  const lines: string[] = []
-  let line = ''
-  for (const w of words) {
-    const t = line ? `${line} ${w}` : w
-    if (ctx.measureText(t).width > W - 110) { lines.push(line); line = w } else line = t
-  }
-  if (line) lines.push(line)
-  lines.slice(0, 2).forEach((l, i) => ctx.fillText(l, 52, H - 78 + i * 30))
+    // caption at the foot
+    ctx.fillStyle = C.cap
+    ctx.font = `400 21px ${FONT_D}`
+    const words = p.caption.split(' ')
+    const lines: string[] = []
+    let line = ''
+    for (const w of words) {
+      const t = line ? `${line} ${w}` : w
+      if (ctx.measureText(t).width > W - 110) { lines.push(line); line = w } else line = t
+    }
+    if (line) lines.push(line)
+    lines.slice(0, 2).forEach((l, i) => ctx.fillText(l, 52, H - 78 + i * 30))
 
-  const tex = new THREE.CanvasTexture(canvas)
-  tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = ANISO
+  }, 'atrium')
   cache.set(p.id, tex)
   return tex
 }

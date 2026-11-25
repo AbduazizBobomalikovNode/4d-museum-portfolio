@@ -4,6 +4,7 @@ import { loadImg, paintReadme, parseReadme } from '@/lib/ghpaint'
 import { loadGithub, onGithub, type GithubSnapshot } from '@/lib/github'
 import { UNIT_BOX } from '@/lib/geo'
 import { ANISO, flatTexture, mkCanvas } from '@/lib/tier'
+import { defer, deferUpload, needFontsRepaint, memoOnce, registerTexture } from '@/lib/assets'
 
 const USER = 'AbduazizBobomalikovNode'
 const PAGE_H = 1024 // content pixels shown per screen
@@ -26,7 +27,7 @@ async function ensurePainted() {
     await Promise.all([...new Set(imgUrls)].map(async (u) => imgs.set(u, await loadImg(u))))
     const paint = () => { paintReadme(ctx, blocks, imgs); listeners.forEach((l) => l()) }
     paint()
-    document.fonts?.ready.then(paint)
+    if (needFontsRepaint()) document.fonts?.ready.then(paint)
   }
   onGithub((s) => void render(s))
   await loadGithub()
@@ -37,7 +38,7 @@ async function ensurePainted() {
  * Pure WebGL mesh: obeys the depth buffer, fog and lighting like everything else.
  */
 export function GithubReadme({ position, rotationY = 0, page = 0 }: { position: [number, number, number]; rotationY?: number; page?: number }) {
-  const { tex, ctx } = useMemo(() => {
+  const { tex, ctx } = useMemo(() => memoOnce('gh-readme:' + page, () => {
     const { canvas, ctx } = mkCanvas(2048, PAGE_H)
     ctx.fillStyle = '#0d1117'
     ctx.fillRect(0, 0, 2048, PAGE_H)
@@ -48,8 +49,9 @@ export function GithubReadme({ position, rotationY = 0, page = 0 }: { position: 
     tex.colorSpace = THREE.SRGBColorSpace
     tex.anisotropy = ANISO
     flatTexture(tex, THREE.LinearFilter)
+    deferUpload(tex, canvas, 'about')
     return { tex, ctx }
-  }, [])
+  }), [page])
   const done = useRef(false)
 
   useEffect(() => {
@@ -63,10 +65,11 @@ export function GithubReadme({ position, rotationY = 0, page = 0 }: { position: 
       ctx.font = '30px "IBM Plex Mono", monospace'
       ctx.fillText(String(page + 1), 1990, 1000)
       tex.needsUpdate = true
+      registerTexture(tex) // pre-upload in idle time instead of at first sight
       done.current = true
     }
     listeners.add(copy)
-    ensurePainted().then(copy)
+    defer('about', async () => { await ensurePainted(); copy() }) // fetch + paint in idle slices after the gate (lazyAssets)
     return () => { listeners.delete(copy) }
   }, [ctx, tex, page])
 

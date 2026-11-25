@@ -6,6 +6,7 @@ import { tr } from '@/lib/i18n'
 import { useLang } from '@/lib/useT'
 import { UNIT_BOX } from '@/lib/geo'
 import { ANISO, flatTexture, mkCanvas } from '@/lib/tier'
+import { defer, deferUpload, memoOnce, registerTexture } from '@/lib/assets'
 
 const USER = 'AbduazizBobomalikovNode'
 
@@ -16,7 +17,7 @@ const USER = 'AbduazizBobomalikovNode'
  * Click opens the profile.
  */
 export function GithubLive({ position, rotationY = 0 }: { position: [number, number, number]; rotationY?: number }) {
-  const { tex, ctx } = useMemo(() => {
+  const { tex, ctx } = useMemo(() => memoOnce('gh-live', () => {
     const { canvas, ctx } = mkCanvas(2048, 1024)
     ctx.fillStyle = '#0d1117'
     ctx.fillRect(0, 0, 2048, 1024)
@@ -27,8 +28,9 @@ export function GithubLive({ position, rotationY = 0 }: { position: [number, num
     tex.colorSpace = THREE.SRGBColorSpace
     tex.anisotropy = ANISO
     flatTexture(tex, THREE.LinearFilter)
+    deferUpload(tex, canvas, 'about')
     return { tex, ctx }
-  }, [])
+  }), [])
   const painted = useRef(false)
   const lang = useLang()
 
@@ -44,10 +46,11 @@ export function GithubLive({ position, rotationY = 0 }: { position: [number, num
         : `${tr('ghCached', lang)} · ${new Date(snap.fetchedAt).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-GB')}`
       paintProfile(ctx, snap.profile, snap.repos, avatar, label)
       tex.needsUpdate = true
+      registerTexture(tex)
       painted.current = true
     }
     const off = onGithub((s) => void draw(s))
-    void loadGithub()
+    defer('about', async () => { await loadGithub() }) // idle, after the gate (lazyAssets)
     document.fonts?.ready.then(() => { if (alive && painted.current) tex.needsUpdate = true })
     return () => { alive = false; off() }
   }, [ctx, tex, lang])

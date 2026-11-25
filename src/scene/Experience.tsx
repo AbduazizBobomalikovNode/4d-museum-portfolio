@@ -14,6 +14,7 @@ import { EscapeLadder } from './EscapeLadder'
 import { perfFlags, perfMode } from '@/lib/perfFlags'
 import { BodyContext, StableBody } from './physics/BodyContext'
 import { perfEvent } from '@/lib/perfBus'
+import { flushCritical, openGate, prewarmScene, setAssetRenderer } from '@/lib/assets'
 
 const DEBUG = import.meta.env.VITE_DEBUG === '1' || import.meta.env.DEV
 
@@ -94,6 +95,9 @@ function ReadyProbe() {
     const run = async () => {
       await new Promise((r) => requestAnimationFrame(r))
       if (cancelled) return
+      // lazyAssets: paint/load only the atrium + entrance before the gate (no-op when the flag is off)
+      await flushCritical()
+      if (cancelled) return
       try {
         const r = gl as THREE.WebGLRenderer & { compileAsync?: (s: THREE.Scene, c: THREE.Camera) => Promise<unknown> }
         // cap the wait: on a slow GPU the remaining shaders finish during the gate screen
@@ -108,6 +112,8 @@ function ReadyProbe() {
       if (cancelled) return
       setWarmup(false)
       setPhase('gate')
+      openGate() // the rest of the assets now load in idle slices, nearest room first
+      prewarmScene(scene) // and every texture gets its GPU upload in idle slices too (prewarm)
     }
     void run()
     return () => { cancelled = true }
@@ -193,6 +199,7 @@ function SceneSettings() {
   // noPreserveBuffer: the canvas no longer keeps its backbuffer, so the bug reporter asks for one
   // synchronous frame right before it reads the pixels (same task => never blank).
   const advance = useThree((s) => s.advance)
+  useEffect(() => { setAssetRenderer(gl as THREE.WebGLRenderer) }, [gl])
   useEffect(() => {
     if (!perfFlags.noPreserveBuffer) return
     const w = window as unknown as { __renderForCapture?: () => void }

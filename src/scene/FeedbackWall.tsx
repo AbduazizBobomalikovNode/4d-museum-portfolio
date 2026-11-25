@@ -7,6 +7,7 @@ import { useT } from '@/lib/useT'
 import { useLang } from '@/lib/useT'
 import { UNIT_BOX } from '@/lib/geo'
 import { ANISO, flatTexture, mkCanvas } from '@/lib/tier'
+import { deferUpload, memoOnce, needFontsRepaint } from '@/lib/assets'
 
 const W = 2048
 const H = 1024
@@ -68,14 +69,15 @@ export function FeedbackWall({ position, rotationY = 0 }: { position: [number, n
   const t = useT()
   const lang = useLang()
 
-  const { tex, ctx } = useMemo(() => {
+  const { tex, ctx } = useMemo(() => memoOnce('feedback', () => {
     const { canvas, ctx } = mkCanvas(W, H)
     const tex = new THREE.CanvasTexture(canvas)
     tex.colorSpace = THREE.SRGBColorSpace
     tex.anisotropy = ANISO
     flatTexture(tex, THREE.LinearFilter)
+    deferUpload(tex, canvas, 'about')
     return { tex, ctx }
-  }, [])
+  }), [])
 
   /** Offscreen input carries the actual text entry (desktop + mobile keyboards, paste, IME). */
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
@@ -228,7 +230,7 @@ export function FeedbackWall({ position, rotationY = 0 }: { position: [number, n
   }, [ctx, tex, values, focus, hover, status, lang])
 
   useEffect(() => { paint() }, [paint])
-  useEffect(() => { document.fonts?.ready.then(() => paint()) }, [paint])
+  useEffect(() => { if (needFontsRepaint()) document.fonts?.ready.then(() => paint()) }, [paint])
 
   // caret blink (only while a field is focused)
   useFrame(({ clock }) => {

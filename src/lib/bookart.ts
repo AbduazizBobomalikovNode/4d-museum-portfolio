@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import type { Book } from './books'
 import { ANISO, mkCanvas } from '@/lib/tier'
+import { deferUpload, needFontsRepaint } from './assets'
 
 /**
  * The gift shelf's small canvas-texture bits: the spin button label, the top-rail title
@@ -53,6 +54,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 
 /** Re-paint once system/web fonts finish loading — canvas text does not reflow on its own. */
 function onFontsReady(draw: () => void, tex: THREE.CanvasTexture) {
+  if (!needFontsRepaint()) return
   document.fonts?.ready?.then(() => { draw(); tex.needsUpdate = true }).catch(() => {})
 }
 
@@ -84,6 +86,7 @@ export function buttonTexture(): THREE.CanvasTexture {
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
   tex.anisotropy = ANISO
+  deferUpload(tex, canvas, 'contact')
   onFontsReady(draw, tex)
   btnTex = tex
   return tex
@@ -114,6 +117,7 @@ export function titleTexture(): THREE.CanvasTexture {
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
   tex.anisotropy = ANISO
+  deferUpload(tex, canvas, 'contact')
   onFontsReady(draw, tex)
   titleTex = tex
   return tex

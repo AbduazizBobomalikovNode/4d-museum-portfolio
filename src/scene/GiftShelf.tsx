@@ -1,11 +1,11 @@
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
-import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 import { BOOKS, BOOK_CELLS, SHELF_COLS, SHELF_ROWS, coverUrl, type Book } from '@/lib/books'
 import { CARD_BTN, buttonTexture, cardTexture, titleTexture } from '@/lib/bookart'
 import { UNIT_BOX, UNIT_PLANE } from '@/lib/geo'
 import { ANISO } from '@/lib/tier'
+import { preloadImage, useImageTexture } from '@/lib/assets'
 
 /**
  * The gift shelf in the Gift Shop: a full-wall bookcase, 8 columns × 8 rows of
@@ -163,10 +163,10 @@ function Spines() {
 }
 
 // ── a single featured cover, its own texture, sized from the image's own aspect ─────────
-BOOKS.forEach((b) => useTexture.preload(coverUrl(b)))
+BOOKS.forEach((b) => preloadImage(coverUrl(b)))
 
 function BookFace({ book, cx, bottom }: { book: Book; cx: number; bottom: number }) {
-  const tex = useTexture(coverUrl(book))
+  const tex = useImageTexture(coverUrl(book), 'contact')
   tex.colorSpace = THREE.SRGBColorSpace
   tex.anisotropy = ANISO
   const img = tex.image as { width?: number; height?: number } | undefined
@@ -203,7 +203,7 @@ function BookFaces() {
 
 /** The reveal book's cover face — suspends on its own so the rest of the prize never waits. */
 function CoverFaceMaterial({ book }: { book: Book }) {
-  const tex = useTexture(coverUrl(book))
+  const tex = useImageTexture(coverUrl(book), 'contact')
   tex.colorSpace = THREE.SRGBColorSpace
   tex.anisotropy = ANISO
   return <meshStandardMaterial attach="material-4" map={tex} roughness={0.62} emissive="#ffffff" emissiveMap={tex} emissiveIntensity={0.34} />

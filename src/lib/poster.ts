@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 import { ANISO, mkCanvas } from '@/lib/tier'
+import { fontsLoaded, lazyOn, lazyPainted, shouldDefer } from './assets'
+import type { RoomId } from '@/data/types'
 
 /** GitHub language colors + brand colors used across posters and wall badges. */
 export const LANG_COLORS: Record<string, string> = {
@@ -27,29 +29,38 @@ const FONT_D = '"Sora", system-ui, sans-serif'
 const FONT_B = '"IBM Plex Sans", system-ui, sans-serif'
 const FONT_M = '"IBM Plex Mono", ui-monospace, monospace'
 
-type Entry = { tex: THREE.CanvasTexture; draw: () => void }
+type Entry = { tex: THREE.CanvasTexture; draw: () => void; early: boolean }
 const cache = new Map<string, Entry>()
 let fontsHooked = false
 
-/** Re-draw every cached canvas once web fonts finish loading (canvas won't reflow on its own). */
+/** Re-draw cached canvases once web fonts finish loading (canvas won't reflow on its own). With lazyAssets the
+ *  fonts were awaited before painting, so only a canvas painted before they arrived (timeout) needs it. */
 function hookFonts() {
   if (fontsHooked || typeof document === 'undefined' || !document.fonts?.ready) return
   fontsHooked = true
   document.fonts.ready.then(() => {
-    for (const e of cache.values()) { e.draw(); e.tex.needsUpdate = true }
+    for (const e of cache.values()) if (!lazyOn || e.early) { e.draw(); e.tex.needsUpdate = true }
   })
 }
 
-function makeTexture(key: string, w: number, h: number, render: (ctx: CanvasRenderingContext2D) => void): THREE.CanvasTexture {
+function makeTexture(key: string, w: number, h: number, render: (ctx: CanvasRenderingContext2D) => void, room: RoomId | null = null): THREE.CanvasTexture {
   const hit = cache.get(key)
   if (hit) return hit.tex
+  if (shouldDefer()) {
+    let ctxRef: CanvasRenderingContext2D | null = null
+    const entry: Entry = { tex: null as unknown as THREE.CanvasTexture, draw: () => { if (ctxRef) { ctxRef.clearRect(0, 0, w, h); render(ctxRef) } }, early: false }
+    entry.tex = lazyPainted(w, h, (ctx) => { ctxRef = ctx; entry.early = !fontsLoaded; ctx.clearRect(0, 0, w, h); render(ctx) }, room)
+    cache.set(key, entry)
+    hookFonts()
+    return entry.tex
+  }
   const { canvas, ctx } = mkCanvas(w, h)
   const draw = () => { ctx.clearRect(0, 0, w, h); render(ctx) }
   draw()
   const tex = new THREE.CanvasTexture(canvas)
   tex.colorSpace = THREE.SRGBColorSpace
   tex.anisotropy = ANISO
-  cache.set(key, { tex, draw })
+  cache.set(key, { tex, draw, early: true })
   hookFonts()
   return tex
 }
@@ -87,7 +98,7 @@ export interface PosterSpec {
 }
 
 /** GitHub-card style poster used as exhibit artwork (1024×640). */
-export function posterTexture(spec: PosterSpec): THREE.CanvasTexture {
+export function posterTexture(spec: PosterSpec, room: RoomId | null = null): THREE.CanvasTexture {
   return makeTexture('poster:' + spec.id, 1024, 512, (ctx) => {
     const accent = langColor(spec.tags?.[0])
     // ground (1024×512 — keep power-of-two: NPOT mipmaps shimmer on some GPUs)
@@ -146,12 +157,12 @@ export function posterTexture(spec: PosterSpec): THREE.CanvasTexture {
       ctx.fillText(spec.footer, 980, 490)
       ctx.textAlign = 'left'
     }
-  })
+  }, room)
 }
 
 /** Square language badge. 2-letter marks sit bottom-right (real JS/TS logo layout),
  * longer wordmarks are centred; PY gets Python's blue/yellow split. */
-export function badgeTexture(label: string, bg: string, fg = '#0B0C10'): THREE.CanvasTexture {
+export function badgeTexture(label: string, bg: string, fg = '#0B0C10', room: RoomId | null = null): THREE.CanvasTexture {
   return makeTexture('badge:' + label, 256, 256, (ctx) => {
     ctx.beginPath()
     ctx.roundRect(0, 0, 256, 256, 28)
@@ -181,11 +192,11 @@ export function badgeTexture(label: string, bg: string, fg = '#0B0C10'): THREE.C
       fitFont(ctx, label, 64, 208, (v) => `800 ${v}px ${FONT_D}`)
       ctx.fillText(label, 128, 134)
     }
-  })
+  }, room)
 }
 
 /** Code-editor mural for large walls (subtle syntax-colored lines). */
-export function codeTexture(seed = 1): THREE.CanvasTexture {
+export function codeTexture(seed = 1, room: RoomId | null = null): THREE.CanvasTexture {
   return makeTexture('code:' + seed, 1024, 1024, (ctx) => {
     ctx.fillStyle = '#111318'
     ctx.fillRect(0, 0, 1024, 1024)
@@ -208,11 +219,11 @@ export function codeTexture(seed = 1): THREE.CanvasTexture {
       y += 42
     }
     ctx.globalAlpha = 1
-  })
+  }, room)
 }
 
 /** Door signage: room name + arrow (used above openings for wayfinding). */
-export function signTexture(title: string, eyebrow: string, key = ''): THREE.CanvasTexture {
+export function signTexture(title: string, eyebrow: string, key = '', room: RoomId | null = null): THREE.CanvasTexture {
   return makeTexture('sign:' + key + title, 512, 128, (ctx) => {
     ctx.fillStyle = '#0F1116'
     ctx.beginPath()
@@ -226,11 +237,11 @@ export function signTexture(title: string, eyebrow: string, key = ''): THREE.Can
     ctx.fillStyle = '#E8E6E0'
     fitFont(ctx, '→  ' + title, 40, 466, (v) => `700 ${v}px ${FONT_D}`)
     ctx.fillText('→  ' + title, 26, 94)
-  })
+  }, room)
 }
 
 /** Museum plaque (small POT canvas — crisp at distance, replaces per-glyph Text meshes). */
-export function plaqueTexture(title: string, sub: string, accent = '#B8780F', hint = 'PRESS E · TAP', key = ''): THREE.CanvasTexture {
+export function plaqueTexture(title: string, sub: string, accent = '#B8780F', hint = 'PRESS E · TAP', key = '', room: RoomId | null = null): THREE.CanvasTexture {
   return makeTexture('plaque:' + key + title + sub, 256, 128, (ctx) => {
     ctx.fillStyle = '#E8E6E0'
     ctx.beginPath()
@@ -245,11 +256,11 @@ export function plaqueTexture(title: string, sub: string, accent = '#B8780F', hi
     ctx.fillStyle = accent
     ctx.font = `12px ${FONT_M}`
     ctx.fillText(hint, 16, 106)
-  })
+  }, room)
 }
 
 /** Museum hall number: huge outlined numeral + small label (512² POT). */
-export function numberTexture(num: string, label: string, accent: string, key = ''): THREE.CanvasTexture {
+export function numberTexture(num: string, label: string, accent: string, key = '', room: RoomId | null = null): THREE.CanvasTexture {
   return makeTexture('num:' + key + num + label, 512, 512, (ctx) => {
     ctx.clearRect(0, 0, 512, 512)
     ctx.strokeStyle = accent
@@ -265,11 +276,11 @@ export function numberTexture(num: string, label: string, accent: string, key = 
     ctx.fillText(label.toUpperCase(), 36, 460)
     ctx.fillStyle = accent
     ctx.fillRect(36, 418, 150, 4)
-  })
+  }, room)
 }
 
 /** Entrance wordmark banner (1024×256 POT). */
-export function wordmarkTexture(): THREE.CanvasTexture {
+export function wordmarkTexture(room: RoomId | null = null): THREE.CanvasTexture {
   return makeTexture('wordmark', 1024, 256, (ctx) => {
     ctx.clearRect(0, 0, 1024, 256)
     ctx.fillStyle = '#E8E6E0'
@@ -286,11 +297,11 @@ export function wordmarkTexture(): THREE.CanvasTexture {
     ctx.beginPath(); ctx.moveTo(980, 40); ctx.lineTo(1004, 64); ctx.stroke()
     ctx.beginPath(); ctx.moveTo(920, 100); ctx.lineTo(944, 124); ctx.stroke()
     ctx.beginPath(); ctx.moveTo(980, 100); ctx.lineTo(1004, 124); ctx.stroke()
-  })
+  }, room)
 }
 
 /** GitHub-style contribution heatmap (512×256 POT). */
-export function contribTexture(seed = 47): THREE.CanvasTexture {
+export function contribTexture(seed = 47, room: RoomId | null = null): THREE.CanvasTexture {
   return makeTexture('contrib:' + seed, 512, 256, (ctx) => {
     ctx.fillStyle = '#0F1116'
     ctx.beginPath(); ctx.roundRect(0, 0, 512, 256, 10); ctx.fill()
@@ -307,11 +318,11 @@ export function contribTexture(seed = 47): THREE.CanvasTexture {
     ctx.fillStyle = '#A5A39B'
     ctx.font = `22px ${FONT_M}`
     ctx.fillText('github.com/AbduazizBobomalikovNode — 18 repos', 26, 216)
-  })
+  }, room)
 }
 
 /** Circuit-board traces (512² POT) — experiments room. */
-export function circuitTexture(seed = 5): THREE.CanvasTexture {
+export function circuitTexture(seed = 5, room: RoomId | null = null): THREE.CanvasTexture {
   return makeTexture('circuit:' + seed, 512, 512, (ctx) => {
     ctx.fillStyle = '#10151a'
     ctx.fillRect(0, 0, 512, 512)
@@ -342,11 +353,11 @@ export function circuitTexture(seed = 5): THREE.CanvasTexture {
     ctx.fillStyle = '#5DE4FF'
     ctx.font = `700 26px ${FONT_M}`
     ctx.fillText('IoT', 232, 264)
-  })
+  }, room)
 }
 
 /** Timeline year band (1024×128 POT). */
-export function yearsTexture(): THREE.CanvasTexture {
+export function yearsTexture(room: RoomId | null = null): THREE.CanvasTexture {
   return makeTexture('years', 1024, 128, (ctx) => {
     ctx.clearRect(0, 0, 1024, 128)
     ctx.strokeStyle = '#F2B441'
@@ -362,11 +373,11 @@ export function yearsTexture(): THREE.CanvasTexture {
     })
     ctx.fillStyle = '#F2B441'
     ctx.beginPath(); ctx.arc(1004, 88, 8, 0, Math.PI * 2); ctx.fill()
-  })
+  }, room)
 }
 
 /** Quote mural (1024×512 POT) — about room. */
-export function quoteTexture(): THREE.CanvasTexture {
+export function quoteTexture(room: RoomId | null = null): THREE.CanvasTexture {
   return makeTexture('quote', 1024, 512, (ctx) => {
     ctx.clearRect(0, 0, 1024, 512)
     ctx.fillStyle = '#5DE4FF'
@@ -383,5 +394,5 @@ export function quoteTexture(): THREE.CanvasTexture {
     ctx.fillText('— Abduaziz Bobomalikov', 170, 350)
     ctx.fillStyle = '#5DE4FF'
     ctx.fillRect(170, 300, 120, 4)
-  })
+  }, room)
 }

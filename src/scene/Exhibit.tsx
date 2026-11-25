@@ -30,7 +30,7 @@ export function Exhibit({ data }: Props) {
   const accent = data.accent ?? room.accent
 
   const plaque = useMemo(
-    () => plaqueTexture(data.title, L(data.subtitle) + (data.year ? ` · ${data.year}` : ''), data.accent ?? room.accent, t('pressE'), lang),
+    () => plaqueTexture(data.title, L(data.subtitle) + (data.year ? ` · ${data.year}` : ''), data.accent ?? room.accent, t('pressE'), lang, data.roomId),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, room.accent, lang],
   )
@@ -47,7 +47,7 @@ export function Exhibit({ data }: Props) {
             description: L(data.description),
             tags: data.tags,
             footer: data.link?.replace('https://', '').replace('mailto:', ''),
-          }),
+          }, data.roomId),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, lang],
   )
