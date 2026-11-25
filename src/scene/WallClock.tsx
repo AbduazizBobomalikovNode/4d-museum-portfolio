@@ -8,14 +8,17 @@ const FONT_M = '"IBM Plex Mono", ui-monospace, monospace'
 import { CITY, MONTHS, WEEKDAYS, type Lang } from '@/lib/i18n'
 import { useLang } from '@/lib/useT'
 
+/** Built once: constructing an Intl formatter is far costlier than using one. */
+const TASHKENT = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Asia/Tashkent',
+  hour: '2-digit', minute: '2-digit', second: '2-digit',
+  day: '2-digit', month: 'numeric', year: 'numeric', weekday: 'short',
+  hour12: false,
+})
+
 /** Tashkent wall parts as numbers (Intl with a fixed IANA zone, independent of the visitor's zone). */
-function tashkentNow(lang: Lang) {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Tashkent',
-    hour: '2-digit', minute: '2-digit', second: '2-digit',
-    day: '2-digit', month: 'numeric', year: 'numeric', weekday: 'short',
-    hour12: false,
-  }).formatToParts(new Date())
+function tashkentNow(lang: Lang, ms: number) {
+  const parts = TASHKENT.formatToParts(new Date(ms))
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? ''
   const wdMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
   return {
@@ -32,7 +35,8 @@ function tashkentNow(lang: Lang) {
  * Canvas is POT (1024×512) and redrawn once per second.
  */
 export function WallClock({ position, rotationY = 0 }: { position: [number, number, number]; rotationY?: number }) {
-  const last = useRef('')
+  const lastSec = useRef(-1)
+  const lastLang = useRef('')
   const lang = useLang()
   const { tex, ctx, canvas } = useMemo(() => {
     const canvas = document.createElement('canvas')
@@ -46,10 +50,13 @@ export function WallClock({ position, rotationY = 0 }: { position: [number, numb
   }, [])
 
   useFrame(() => {
-    const t = tashkentNow(lang)
-    const stamp = t.time + lang
-    if (stamp === last.current) return
-    last.current = stamp
+    // the face only changes once a second (or with the language): compare the whole second
+    // first, so the other 59 frames cost two integer ops instead of a date format
+    const sec = Math.floor(Date.now() / 1000)
+    if (sec === lastSec.current && lang === lastLang.current) return
+    lastSec.current = sec
+    lastLang.current = lang
+    const t = tashkentNow(lang, sec * 1000)
     const w = canvas.width
     const h = canvas.height
     ctx.clearRect(0, 0, w, h)
