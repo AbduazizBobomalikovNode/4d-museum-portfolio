@@ -78,6 +78,19 @@ Allowlist: `https://4d-portfolio.vercel.app` (doim), `FEEDBACK_ALLOWED_ORIGINS` 
 
 ---
 
+## Statik rasmlar keshi
+
+`vercel.json` da `/assets/*` (nomida hash bor) bir yilga `immutable` keshlanadi. `/books/*`, `/textures/*` va `/cv-preview.jpg` esa `public, max-age=604800, stale-while-revalidate=86400` oladi — ya'ni brauzer ularni bir hafta qayta so'ramasdan ishlatadi (avval har tashrifda ~27 ta faylni qayta tekshirardi).
+
+> **Muhim:** bu fayllarning nomida hash yo'q. Rasmni **almashtirsangiz, yangi fayl nomi bering** (masalan `cv-preview-2.jpg` va `CvWall.tsx` dagi havolani yangilang) — aks holda eski tashrifchilar bir hafta davomida eski rasmni ko'raveradi. `/github-snapshot.json` va `index.html` bu qoidaga kirmaydi: ular doim qayta tekshiriladi.
+
+## Ish unumdorligini o'lchash / o'chirish kalitlari
+
+- `?perf=1` — o'lchov rejimi: chap-pastda kichik panel (fps, p95, draw calls, triangles, programs, textures) va `window.__perf.snapshot()` / `window.__perf.reset()`. Bu rejimda tashrif/like hisoblagichlari **oshirilmaydi** (faqat o'qiladi). `?perf=1` bo'lmasa hech narsa yuklanmaydi.
+- `?opt=off` — barcha optimizatsiyalar o'chadi (avvalgi xatti-harakat). `?optOff=stableTree,reflectorCull` — faqat nomi aytilganlari. Kalitlar: `stableTree`, `prefetchPhysics`, `reflectorCull`, `previewCull`, `monitorAfterEnter`, `noPreserveBuffer` (`src/lib/perfFlags.ts`).
+
+---
+
 ## Tekshirish
 
 ```bash
