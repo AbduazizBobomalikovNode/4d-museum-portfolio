@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useStore } from '@/state/store'
 import { bugReportConfigured, sendBugReport } from '@/lib/feedback'
+import { perfFlags } from '@/lib/perfFlags'
 
 const stamp = () => {
   const d = new Date()
@@ -35,6 +36,9 @@ export function BugReport() {
     const canvas = document.querySelector('canvas')
     if (!canvas) return
     document.exitPointerLock?.()
+    // without preserveDrawingBuffer the backbuffer is gone once the frame is presented: draw one
+    // frame now, and read it below in this same task
+    if (perfFlags.noPreserveBuffer) (window as unknown as { __renderForCapture?: () => void }).__renderForCapture?.()
     try {
       // JPEG, capped at 1600px wide: a full-size PNG runs to ~3MB, over what the
       // relay (and Vercel's request body limit) will take.
